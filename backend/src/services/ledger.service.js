@@ -1,76 +1,79 @@
-import { prisma } from '../config/db.js';
 import { ApiError } from '../utils/ApiError.js';
 
 /**
- * Posts a journal entry with its items inside a single transaction.
- * @param {object} params
- * @param {string} params.journalId
- * @param {Date} params.date
- * @param {string} params.createdById
- * @param {string} [params.reference]
- * @param {string} [params.description]
- * @param {'DRAFT'|'POSTED'|'CANCELLED'} [params.status]
- * @param {Array<{ accountId: string, analyticAccountId?: string|null, debit: number, credit: number, description?: string|null }>} params.items
+ * Validates double-entry balance before any DB write.
+ * @param {Array<{ debit: number|string, credit: number|string }>} items
  */
-export const postJournalEntry = async ({
-  journalId,
-  date,
-  createdById,
-  reference,
-  description,
-  status = 'DRAFT',
-  items,
-}) => {
-  const totalDebit = items.reduce((sum, i) => sum + i.debit, 0);
-  const totalCredit = items.reduce((sum, i) => sum + i.credit, 0);
+export const assertBalanced = (items) => {
+  const totalDebit = items.reduce((sum, i) => sum + Number(i.debit), 0);
+  const totalCredit = items.reduce((sum, i) => sum + Number(i.credit), 0);
 
   if (Math.abs(totalDebit - totalCredit) > 0.001) {
-    throw new ApiError(400, `Debits (${totalDebit}) must equal credits (${totalCredit})`);
+    throw new ApiError(
+      400,
+      `Debits (${totalDebit}) must equal credits (${totalCredit})`,
+    );
   }
+};
 
-  return prisma.$transaction(async (tx) => {
-    const journal = await tx.journal.findUnique({ where: { id: journalId } });
-    if (!journal) throw new ApiError(404, 'Journal not found');
+/**
+ * @param {import('@prisma/client').Prisma.TransactionClient} tx
+ * @param {object} params
+ */
+export const createJournalEntryInTx = async (tx, params) => {
+  const {
+    journalId,
+    date,
+    reference,
+    sourceType,
+    sourceId,
+    createdById,
+    items,
+  } = params;
 
-    const entry = await tx.journalEntry.create({
-      data: {
-        journalId,
-        date,
-        reference,
-        description,
-        status,
-        createdById,
-        items: {
-          create: items.map((item) => ({
-            accountId: item.accountId,
-            analyticAccountId: item.analyticAccountId ?? null,
-            debit: item.debit,
-            credit: item.credit,
-            description: item.description ?? null,
-          })),
+  assertBalanced(items);
+
+  const journal = await tx.journal.findUnique({ where: { id: journalId } });
+  if (!journal) throw new ApiError(404, 'Journal not found');
+
+  return tx.journalEntry.create({
+    data: {
+      journalId,
+      date,
+      reference,
+      sourceType,
+      sourceId,
+      createdById,
+      items: {
+        create: items.map((item) => ({
+          accountId: item.accountId,
+          analyticAccountId: item.analyticAccountId ?? null,
+          debit: item.debit,
+          credit: item.credit,
+          description: item.description ?? null,
+        })),
+      },
+    },
+    include: {
+      items: {
+        select: {
+          id: true,
+          accountId: true,
+          debit: true,
+          credit: true,
+          analyticAccountId: true,
         },
       },
-      select: {
-        id: true,
-        journalId: true,
-        date: true,
-        reference: true,
-        description: true,
-        status: true,
-        items: {
-          select: {
-            id: true,
-            accountId: true,
-            debit: true,
-            credit: true,
-            description: true,
-          },
-        },
-      },
-    });
-
-    return entry;
+    },
   });
 };
 
-export default { postJournalEntry };
+/**
+ * Posts a journal entry with its items inside a single transaction.
+ */
+export const postJournalEntry = async (params) => {
+  const { prisma } = await import('../config/db.js');
+  return prisma.$transaction((tx) => createJournalEntryInTx(tx, params));
+};
+
+export default { assertBalanced, createJournalEntryInTx, postJournalEntry };

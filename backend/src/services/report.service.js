@@ -5,48 +5,60 @@ import { prisma } from '../config/db.js';
  * @param {Date} asOfDate
  */
 export const getBalanceSheet = async (asOfDate) => {
-  const items = await prisma.journalItem.findMany({
+  const grouped = await prisma.journalItem.groupBy({
+    by: ['accountId'],
     where: {
       journalEntry: {
-        status: 'POSTED',
         date: { lte: asOfDate },
       },
     },
-    select: {
+    _sum: {
       debit: true,
       credit: true,
-      account: {
-        select: { id: true, code: true, name: true, type: true },
-      },
     },
   });
 
-  const byAccount = new Map();
+  const accountIds = grouped.map((g) => g.accountId);
+  const accounts = await prisma.account.findMany({
+    where: {
+      id: { in: accountIds },
+      type: { in: ['ASSET', 'LIABILITY', 'CAPITAL'] },
+    },
+    select: { id: true, name: true, type: true },
+  });
 
-  for (const item of items) {
-    const key = item.account.id;
-    if (!byAccount.has(key)) {
-      byAccount.set(key, { ...item.account, debit: 0, credit: 0 });
-    }
-    const acc = byAccount.get(key);
-    acc.debit += Number(item.debit);
-    acc.credit += Number(item.credit);
+  const accountMap = new Map(accounts.map((a) => [a.id, a]));
+  const sections = { ASSET: [], LIABILITY: [], CAPITAL: [] };
+  const totals = { ASSET: 0, LIABILITY: 0, CAPITAL: 0 };
+
+  for (const row of grouped) {
+    const account = accountMap.get(row.accountId);
+    if (!account) continue;
+
+    const debit = Number(row._sum.debit ?? 0);
+    const credit = Number(row._sum.credit ?? 0);
+    const balance =
+      account.type === 'ASSET' ? debit - credit : credit - debit;
+
+    sections[account.type].push({
+      accountId: account.id,
+      name: account.name,
+      type: account.type,
+      debit,
+      credit,
+      balance,
+    });
+    totals[account.type] += balance;
   }
 
-  const sections = { ASSET: [], LIABILITY: [], EQUITY: [] };
-
-  for (const acc of byAccount.values()) {
-    if (!['ASSET', 'LIABILITY', 'EQUITY'].includes(acc.type)) continue;
-    const balance =
-      acc.type === 'ASSET'
-        ? acc.debit - acc.credit
-        : acc.credit - acc.debit;
-    sections[acc.type].push({ ...acc, balance });
+  for (const type of Object.keys(sections)) {
+    sections[type].sort((a, b) => a.name.localeCompare(b.name));
   }
 
   return {
     asOfDate,
     sections,
+    totals,
   };
 };
 
@@ -56,74 +68,142 @@ export const getBalanceSheet = async (asOfDate) => {
  * @param {Date} endDate
  */
 export const getProfitAndLoss = async (startDate, endDate) => {
-  const items = await prisma.journalItem.findMany({
+  const grouped = await prisma.journalItem.groupBy({
+    by: ['accountId'],
     where: {
       journalEntry: {
-        status: 'POSTED',
         date: { gte: startDate, lte: endDate },
       },
-      account: { type: { in: ['REVENUE', 'EXPENSE'] } },
+      account: {
+        type: { in: ['INCOME', 'EXPENSE'] },
+      },
     },
-    select: {
+    _sum: {
       debit: true,
       credit: true,
-      account: { select: { id: true, code: true, name: true, type: true } },
     },
   });
 
-  let revenue = 0;
-  let expenses = 0;
-  const lines = [];
+  const accountIds = grouped.map((g) => g.accountId);
+  const accounts = await prisma.account.findMany({
+    where: { id: { in: accountIds } },
+    select: { id: true, name: true, type: true },
+  });
 
-  for (const item of items) {
+  const accountMap = new Map(accounts.map((a) => [a.id, a]));
+  const incomeLines = [];
+  const expenseLines = [];
+  let totalIncome = 0;
+  let totalExpense = 0;
+
+  for (const row of grouped) {
+    const account = accountMap.get(row.accountId);
+    if (!account) continue;
+
+    const debit = Number(row._sum.debit ?? 0);
+    const credit = Number(row._sum.credit ?? 0);
     const amount =
-      item.account.type === 'REVENUE'
-        ? Number(item.credit) - Number(item.debit)
-        : Number(item.debit) - Number(item.credit);
+      account.type === 'INCOME' ? credit - debit : debit - credit;
 
-    if (item.account.type === 'REVENUE') revenue += amount;
-    else expenses += amount;
+    const line = {
+      accountId: account.id,
+      name: account.name,
+      type: account.type,
+      amount,
+    };
 
-    lines.push({ account: item.account, amount });
+    if (account.type === 'INCOME') {
+      incomeLines.push(line);
+      totalIncome += amount;
+    } else {
+      expenseLines.push(line);
+      totalExpense += amount;
+    }
   }
+
+  incomeLines.sort((a, b) => a.name.localeCompare(b.name));
+  expenseLines.sort((a, b) => a.name.localeCompare(b.name));
 
   return {
     startDate,
     endDate,
-    revenue,
-    expenses,
-    netIncome: revenue - expenses,
-    lines,
+    income: { lines: incomeLines, total: totalIncome },
+    expenses: { lines: expenseLines, total: totalExpense },
+    netIncome: totalIncome - totalExpense,
   };
 };
 
 /**
- * Budget vs actual report.
- * @param {number} fiscalYear
- * @param {number} [period]
+ * Budget vs actual variance for a period.
+ * @param {Date} periodStart
+ * @param {Date} periodEnd
  */
-export const getBudgetReport = async (fiscalYear, period) => {
+export const getBudgetVariance = async (periodStart, periodEnd) => {
   const budgets = await prisma.budget.findMany({
     where: {
-      fiscalYear,
-      ...(period ? { period } : {}),
+      periodStart: { lte: periodEnd },
+      periodEnd: { gte: periodStart },
     },
     select: {
       id: true,
-      fiscalYear: true,
-      period: true,
+      name: true,
+      periodStart: true,
+      periodEnd: true,
       plannedAmount: true,
-      account: { select: { id: true, code: true, name: true, type: true } },
-      analyticAccount: { select: { id: true, code: true, name: true } },
+      analyticAccount: {
+        select: { id: true, name: true, type: true },
+      },
+      responsiblePerson: {
+        select: { id: true, name: true },
+      },
     },
   });
 
-  return budgets.map((b) => ({
-    ...b,
-    plannedAmount: Number(b.plannedAmount),
-    actualAmount: 0,
-    variance: Number(b.plannedAmount),
-  }));
+  const analyticIds = budgets.map((b) => b.analyticAccount.id);
+
+  const actuals = await prisma.journalItem.groupBy({
+    by: ['analyticAccountId'],
+    where: {
+      analyticAccountId: { in: analyticIds },
+      journalEntry: {
+        date: { gte: periodStart, lte: periodEnd },
+      },
+    },
+    _sum: {
+      debit: true,
+      credit: true,
+    },
+  });
+
+  const actualMap = new Map(
+    actuals.map((a) => [
+      a.analyticAccountId,
+      {
+        debit: Number(a._sum.debit ?? 0),
+        credit: Number(a._sum.credit ?? 0),
+      },
+    ]),
+  );
+
+  return budgets.map((budget) => {
+    const actualRow = actualMap.get(budget.analyticAccount.id) ?? {
+      debit: 0,
+      credit: 0,
+    };
+    const planned = Number(budget.plannedAmount);
+    const actual =
+      budget.analyticAccount.type === 'INCOME'
+        ? actualRow.credit - actualRow.debit
+        : actualRow.debit - actualRow.credit;
+    const variance = planned - actual;
+
+    return {
+      ...budget,
+      plannedAmount: planned,
+      actualAmount: actual,
+      variance,
+    };
+  });
 };
 
-export default { getBalanceSheet, getProfitAndLoss, getBudgetReport };
+export default { getBalanceSheet, getProfitAndLoss, getBudgetVariance };

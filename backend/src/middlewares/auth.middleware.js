@@ -25,8 +25,7 @@ export const authenticate = asyncHandler(async (req, _res, next) => {
     select: {
       id: true,
       email: true,
-      firstName: true,
-      lastName: true,
+      name: true,
       role: true,
       contactId: true,
       isActive: true,

@@ -1,0 +1,547 @@
+@baseUrl = http://localhost:5000/api/v1
+@token = {{login.response.body.data.token}}
+
+### Health
+GET {{baseUrl}}/health
+
+### Auth — Login (admin)
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@ufac.local",
+  "password": "Admin123!"
+}
+
+### Auth — Me
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{token}}
+
+# ─── Contacts ───────────────────────────────────────────────
+
+### List contacts
+GET {{baseUrl}}/contacts?page=1&limit=20
+Authorization: Bearer {{token}}
+
+### Get contact
+GET {{baseUrl}}/contacts/{{contactId}}
+Authorization: Bearer {{token}}
+
+### Create contact
+POST {{baseUrl}}/contacts
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "New Vendor Ltd",
+  "email": "newvendor@example.com",
+  "phone": "+1-555-9999",
+  "type": "VENDOR",
+  "address": "1 Main St"
+}
+
+### Update contact
+PUT {{baseUrl}}/contacts/{{contactId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "phone": "+1-555-8888"
+}
+
+### Delete contact
+DELETE {{baseUrl}}/contacts/{{contactId}}
+Authorization: Bearer {{token}}
+
+# ─── Products ───────────────────────────────────────────────
+
+### List products
+GET {{baseUrl}}/products?page=1&limit=20&search=sofa
+Authorization: Bearer {{token}}
+
+### Get product
+GET {{baseUrl}}/products/{{productId}}
+Authorization: Bearer {{token}}
+
+### Create product
+POST {{baseUrl}}/products
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Ergonomic Chair",
+  "type": "GOODS",
+  "salesPrice": 499.99,
+  "cost": 250,
+  "category": "Office",
+  "description": "Adjustable lumbar support"
+}
+
+### Update product
+PUT {{baseUrl}}/products/{{productId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "salesPrice": 549.99
+}
+
+### Delete product
+DELETE {{baseUrl}}/products/{{productId}}
+Authorization: Bearer {{token}}
+
+# ─── Accounts ───────────────────────────────────────────────
+
+### List accounts
+GET {{baseUrl}}/accounts?page=1&limit=20&type=ASSET
+Authorization: Bearer {{token}}
+
+### Get account
+GET {{baseUrl}}/accounts/{{accountId}}
+Authorization: Bearer {{token}}
+
+### Create account
+POST {{baseUrl}}/accounts
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Petty Cash",
+  "type": "ASSET"
+}
+
+### Update account
+PUT {{baseUrl}}/accounts/{{accountId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "isActive": false
+}
+
+### Delete account
+DELETE {{baseUrl}}/accounts/{{accountId}}
+Authorization: Bearer {{token}}
+
+# ─── Journals ─────────────────────────────────────────────────
+
+### List journals
+GET {{baseUrl}}/journals?page=1&limit=20
+Authorization: Bearer {{token}}
+
+### Get journal
+GET {{baseUrl}}/journals/{{journalId}}
+Authorization: Bearer {{token}}
+
+### Create journal
+POST {{baseUrl}}/journals
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Misc Journal",
+  "type": "CASH"
+}
+
+### Update journal
+PUT {{baseUrl}}/journals/{{journalId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Updated Journal Name"
+}
+
+### Delete journal
+DELETE {{baseUrl}}/journals/{{journalId}}
+Authorization: Bearer {{token}}
+
+### List journal entries
+GET {{baseUrl}}/journals/entries?page=1&limit=20
+Authorization: Bearer {{token}}
+
+### Create manual journal entry
+POST {{baseUrl}}/journals/entries
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "journalId": "{{journalId}}",
+  "date": "2026-02-01",
+  "reference": "ADJ-001",
+  "sourceType": "MANUAL",
+  "items": [
+    {
+      "accountId": "{{accountId}}",
+      "debit": 100,
+      "credit": 0,
+      "description": "Adjustment debit"
+    },
+    {
+      "accountId": "{{accountId2}}",
+      "debit": 0,
+      "credit": 100,
+      "description": "Adjustment credit"
+    }
+  ]
+}
+
+# ─── Purchase Orders ──────────────────────────────────────────
+
+### List purchase orders
+GET {{baseUrl}}/purchase-orders?page=1&limit=20
+Authorization: Bearer {{token}}
+
+### Get purchase order
+GET {{baseUrl}}/purchase-orders/{{purchaseOrderId}}
+Authorization: Bearer {{token}}
+
+### Create purchase order
+POST {{baseUrl}}/purchase-orders
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "contactId": "{{vendorContactId}}",
+  "date": "2026-02-01",
+  "status": "CONFIRMED",
+  "notes": "Restock order",
+  "lines": [
+    {
+      "productId": "{{productId}}",
+      "quantity": 10,
+      "unitPrice": 650
+    }
+  ]
+}
+
+### Update purchase order
+PUT {{baseUrl}}/purchase-orders/{{purchaseOrderId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "status": "CONFIRMED",
+  "notes": "Updated notes"
+}
+
+### Delete purchase order
+DELETE {{baseUrl}}/purchase-orders/{{purchaseOrderId}}
+Authorization: Bearer {{token}}
+
+# ─── Vendor Bills ─────────────────────────────────────────────
+
+### List vendor bills
+GET {{baseUrl}}/vendor-bills?page=1&limit=20
+Authorization: Bearer {{token}}
+
+### Get vendor bill
+GET {{baseUrl}}/vendor-bills/{{vendorBillId}}
+Authorization: Bearer {{token}}
+
+### Create vendor bill (standalone)
+POST {{baseUrl}}/vendor-bills
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "contactId": "{{vendorContactId}}",
+  "invoiceDate": "2026-02-05",
+  "dueDate": "2026-03-05",
+  "lines": [
+    {
+      "productId": "{{productId}}",
+      "quantity": 5,
+      "unitPrice": 650
+    }
+  ]
+}
+
+### Create vendor bill from purchase order
+POST {{baseUrl}}/vendor-bills/from-purchase-order
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "purchaseOrderId": "{{purchaseOrderId}}",
+  "invoiceDate": "2026-02-05",
+  "dueDate": "2026-03-05"
+}
+
+### Update vendor bill
+PUT {{baseUrl}}/vendor-bills/{{vendorBillId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "dueDate": "2026-03-15"
+}
+
+### Delete vendor bill
+DELETE {{baseUrl}}/vendor-bills/{{vendorBillId}}
+Authorization: Bearer {{token}}
+
+# ─── Sales Orders ─────────────────────────────────────────────
+
+### List sales orders
+GET {{baseUrl}}/sales-orders?page=1&limit=20
+Authorization: Bearer {{token}}
+
+### Get sales order
+GET {{baseUrl}}/sales-orders/{{salesOrderId}}
+Authorization: Bearer {{token}}
+
+### Create sales order
+POST {{baseUrl}}/sales-orders
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "contactId": "{{customerContactId}}",
+  "date": "2026-02-01",
+  "status": "CONFIRMED",
+  "notes": "Client order",
+  "lines": [
+    {
+      "productId": "{{productId}}",
+      "quantity": 2,
+      "unitPrice": 1299.99,
+      "tax": 100
+    }
+  ]
+}
+
+### Update sales order
+PUT {{baseUrl}}/sales-orders/{{salesOrderId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "status": "CONFIRMED"
+}
+
+### Delete sales order
+DELETE {{baseUrl}}/sales-orders/{{salesOrderId}}
+Authorization: Bearer {{token}}
+
+# ─── Customer Invoices ────────────────────────────────────────
+
+### List customer invoices
+GET {{baseUrl}}/customer-invoices?page=1&limit=20
+Authorization: Bearer {{token}}
+
+### Get customer invoice
+GET {{baseUrl}}/customer-invoices/{{customerInvoiceId}}
+Authorization: Bearer {{token}}
+
+### Create customer invoice (standalone)
+POST {{baseUrl}}/customer-invoices
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "contactId": "{{customerContactId}}",
+  "invoiceDate": "2026-02-05",
+  "dueDate": "2026-03-05",
+  "lines": [
+    {
+      "productId": "{{productId}}",
+      "quantity": 1,
+      "unitPrice": 899,
+      "tax": 50
+    }
+  ]
+}
+
+### Create customer invoice from sales order
+POST {{baseUrl}}/customer-invoices/from-sales-order
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "salesOrderId": "{{salesOrderId}}",
+  "invoiceDate": "2026-02-05",
+  "dueDate": "2026-03-05"
+}
+
+### Update customer invoice
+PUT {{baseUrl}}/customer-invoices/{{customerInvoiceId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "dueDate": "2026-03-20"
+}
+
+### Delete customer invoice
+DELETE {{baseUrl}}/customer-invoices/{{customerInvoiceId}}
+Authorization: Bearer {{token}}
+
+# ─── Payments ─────────────────────────────────────────────────
+
+### List payments
+GET {{baseUrl}}/payments?page=1&limit=20
+Authorization: Bearer {{token}}
+
+### Get payment
+GET {{baseUrl}}/payments/{{paymentId}}
+Authorization: Bearer {{token}}
+
+### Create payment (vendor bill — bank)
+POST {{baseUrl}}/payments
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "contactId": "{{vendorContactId}}",
+  "billId": "{{vendorBillId}}",
+  "method": "BANK",
+  "amount": 1000,
+  "date": "2026-02-10",
+  "reference": "WIRE-002"
+}
+
+### Create payment (customer invoice — cash)
+POST {{baseUrl}}/payments
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "contactId": "{{customerContactId}}",
+  "invoiceId": "{{customerInvoiceId}}",
+  "method": "CASH",
+  "amount": 500,
+  "date": "2026-02-10",
+  "reference": "CASH-002"
+}
+
+### Delete payment
+DELETE {{baseUrl}}/payments/{{paymentId}}
+Authorization: Bearer {{token}}
+
+# ─── Analytic Accounts ────────────────────────────────────────
+
+### List analytic accounts
+GET {{baseUrl}}/analytic-accounts?page=1&limit=20
+Authorization: Bearer {{token}}
+
+### Get analytic account
+GET {{baseUrl}}/analytic-accounts/{{analyticAccountId}}
+Authorization: Bearer {{token}}
+
+### Create analytic account
+POST {{baseUrl}}/analytic-accounts
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Marketing",
+  "type": "EXPENSE"
+}
+
+### Update analytic account
+PUT {{baseUrl}}/analytic-accounts/{{analyticAccountId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "status": "ACTIVE"
+}
+
+### Delete analytic account
+DELETE {{baseUrl}}/analytic-accounts/{{analyticAccountId}}
+Authorization: Bearer {{token}}
+
+# ─── Budgets ──────────────────────────────────────────────────
+
+### List budgets
+GET {{baseUrl}}/budgets?page=1&limit=20
+Authorization: Bearer {{token}}
+
+### Get budget
+GET {{baseUrl}}/budgets/{{budgetId}}
+Authorization: Bearer {{token}}
+
+### Create budget
+POST {{baseUrl}}/budgets
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Q2 Marketing Budget",
+  "periodStart": "2026-04-01",
+  "periodEnd": "2026-06-30",
+  "plannedAmount": 10000,
+  "analyticAccountId": "{{analyticAccountId}}",
+  "responsiblePersonId": "{{userId}}"
+}
+
+### Update budget
+PUT {{baseUrl}}/budgets/{{budgetId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "plannedAmount": 12000
+}
+
+### Delete budget
+DELETE {{baseUrl}}/budgets/{{budgetId}}
+Authorization: Bearer {{token}}
+
+# ─── Reports ──────────────────────────────────────────────────
+
+### Balance sheet
+GET {{baseUrl}}/reports/balance-sheet?date=2026-01-31
+Authorization: Bearer {{token}}
+
+### Profit & loss
+GET {{baseUrl}}/reports/profit-loss?start=2026-01-01&end=2026-01-31
+Authorization: Bearer {{token}}
+
+### Budget variance
+GET {{baseUrl}}/reports/budget?periodStart=2026-01-01&periodEnd=2026-03-31
+Authorization: Bearer {{token}}
+
+# ─── Contact portal (scoped reads) ───────────────────────────
+
+### Login as vendor contact
+# @name vendorLogin
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "vendor@urbanfurniture.com",
+  "password": "Contact123!"
+}
+
+### Vendor — list own purchase orders
+GET {{baseUrl}}/purchase-orders
+Authorization: Bearer {{vendorLogin.response.body.data.token}}
+
+### Vendor — list own vendor bills
+GET {{baseUrl}}/vendor-bills
+Authorization: Bearer {{vendorLogin.response.body.data.token}}
+
+### Login as customer contact
+# @name customerLogin
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "customer@designstudio.com",
+  "password": "Contact123!"
+}
+
+### Customer — list own sales orders
+GET {{baseUrl}}/sales-orders
+Authorization: Bearer {{customerLogin.response.body.data.token}}
+
+### Customer — list own invoices
+GET {{baseUrl}}/customer-invoices
+Authorization: Bearer {{customerLogin.response.body.data.token}}
+
+### Customer — list own payments
+GET {{baseUrl}}/payments
+Authorization: Bearer {{customerLogin.response.body.data.token}}

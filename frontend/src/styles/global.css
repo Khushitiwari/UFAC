@@ -819,3 +819,215 @@ a:hover {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* ─── Journal entry form ─────────────────────────────────── */
+
+.journal-entry-page-card {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.journal-entry-meta {
+  margin-bottom: 0.25rem;
+}
+
+.journal-entry-lines-section {
+  margin-top: 1.25rem;
+}
+
+.journal-entry-lines-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.journal-entry-lines-header h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.journal-entry-table {
+  width: 100%;
+  min-width: 0;
+}
+
+.journal-entry-row {
+  display: grid;
+  gap: 0.65rem;
+  align-items: end;
+  min-width: 0;
+}
+
+.journal-entry-row-head {
+  display: none;
+}
+
+.journal-entry-field {
+  min-width: 0;
+}
+
+.journal-entry-field select,
+.journal-entry-field input {
+  width: 100%;
+  min-width: 0;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+  font-family: inherit;
+  background: #fafbfc;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.journal-entry-field select:focus,
+.journal-entry-field input:focus {
+  outline: none;
+  border-color: var(--color-primary-light);
+  box-shadow: 0 0 0 3px rgba(26, 74, 122, 0.12);
+  background: #fff;
+}
+
+.journal-entry-mobile-label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.journal-entry-field-action {
+  display: flex;
+  justify-content: flex-end;
+  padding-bottom: 0.15rem;
+}
+
+.journal-entry-field-action .btn {
+  width: 100%;
+}
+
+.journal-entry-row:not(.journal-entry-row-head) {
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: #fafbfc;
+}
+
+.journal-entry-totals {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  margin: 1.25rem 0;
+  padding: 1rem 1.15rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-primary-soft);
+}
+
+.journal-entry-totals.is-unbalanced {
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+
+.journal-entry-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.journal-entry-total-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.journal-entry-total-value {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.journal-entry-balance-error {
+  margin: 0;
+  grid-column: 1 / -1;
+}
+
+.journal-entry-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+@media (min-width: 720px) {
+  .journal-entry-row {
+    grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+    gap: 0.75rem;
+    align-items: center;
+  }
+
+  .journal-entry-row-head {
+    display: grid;
+    padding: 0 0.25rem 0.5rem;
+    margin-bottom: 0.25rem;
+    border-bottom: 2px solid var(--color-border);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .journal-entry-row:not(.journal-entry-row-head) {
+    padding: 0.35rem 0.25rem;
+    margin-bottom: 0.5rem;
+    border: none;
+    border-bottom: 1px solid var(--color-border);
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .journal-entry-mobile-label {
+    display: none;
+  }
+
+  .journal-entry-field-action .btn {
+    width: auto;
+    white-space: nowrap;
+  }
+
+  .journal-entry-totals {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .journal-entry-balance-error {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 900px) {
+  .main-content {
+    padding: 1.25rem 1rem;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+@media (max-width: 560px) {
+  .journal-entry-form-actions .btn {
+    width: 100%;
+  }
+}

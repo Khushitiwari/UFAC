@@ -59,9 +59,10 @@ const JournalEntryPage = () => {
       {!loading && (
     <PageShell
       title="Manual Journal Entry"
-      actions={<Link to="/journals"><Button variant="secondary">Back</Button></Link>}
+      bare
+      actions={<Link to="/journals/entries"><Button variant="secondary">Back</Button></Link>}
     >
-      <div className="card">
+      <div className="card journal-entry-page-card">
         <JournalEntryForm journals={journals} accounts={accounts} onSubmit={handleSubmit} />
       </div>
     </PageShell>

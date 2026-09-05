@@ -71,43 +71,110 @@ const JournalEntryForm = ({ onSubmit, journals = [], accounts = [], submitLabel 
   );
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div className="form-group">
-        <label htmlFor="journalId">Journal *</label>
-        <select id="journalId" name="journalId" value={form.journalId} onChange={handleChange}>
-          <option value="">Select journal...</option>
-          {journals.map((j) => <option key={j.id} value={j.id}>{j.name}</option>)}
-        </select>
-        {errors.journalId && <div className="form-error">{errors.journalId}</div>}
+    <form className="journal-entry-form" onSubmit={handleSubmit}>
+      <div className="form-row journal-entry-meta">
+        <div className="form-group">
+          <label htmlFor="journalId">Journal *</label>
+          <select id="journalId" name="journalId" value={form.journalId} onChange={handleChange}>
+            <option value="">Select journal...</option>
+            {journals.map((j) => <option key={j.id} value={j.id}>{j.name}</option>)}
+          </select>
+          {errors.journalId && <div className="form-error">{errors.journalId}</div>}
+        </div>
+        <div className="form-group">
+          <label htmlFor="date">Date *</label>
+          <input id="date" name="date" type="date" value={form.date} onChange={handleChange} />
+        </div>
       </div>
-      <div className="form-group">
-        <label htmlFor="date">Date *</label>
-        <input id="date" name="date" type="date" value={form.date} onChange={handleChange} />
-      </div>
+
       <div className="form-group">
         <label htmlFor="reference">Reference</label>
-        <input id="reference" name="reference" value={form.reference || ''} onChange={handleChange} />
+        <input id="reference" name="reference" value={form.reference || ''} onChange={handleChange} placeholder="Optional reference" />
       </div>
-      <h4 style={{ margin: '1rem 0 0.5rem' }}>Journal Items</h4>
-      {errors.items && <div className="form-error">{errors.items}</div>}
-      {form.items.map((item, idx) => (
-        <div key={idx} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto', gap: '0.5rem', marginBottom: '0.5rem' }}>
-          <select value={item.accountId} onChange={(e) => updateItem(idx, 'accountId', e.target.value)}>
-            <option value="">Account...</option>
-            {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
-          </select>
-          <input type="number" min="0" step="0.01" placeholder="Debit" value={item.debit} onChange={(e) => updateItem(idx, 'debit', e.target.value)} />
-          <input type="number" min="0" step="0.01" placeholder="Credit" value={item.credit} onChange={(e) => updateItem(idx, 'credit', e.target.value)} />
-          <Button type="button" variant="secondary" onClick={() => removeItem(idx)} disabled={form.items.length <= 2}>Remove</Button>
+
+      <div className="journal-entry-lines-section">
+        <div className="journal-entry-lines-header">
+          <h4>Journal Items</h4>
+          <Button type="button" variant="secondary" className="btn-sm" onClick={addItem}>+ Add Line</Button>
         </div>
-      ))}
-      <Button type="button" variant="secondary" onClick={addItem} style={{ marginBottom: '1rem' }}>+ Add Line</Button>
-      <div style={{ marginBottom: '1rem' }}>
-        <div>Total Debit: {formatCurrency(totalDebit)}</div>
-        <div>Total Credit: {formatCurrency(totalCredit)}</div>
-        {!isBalanced && <div className="form-error">Entry must be balanced before posting</div>}
+        {errors.items && <div className="form-error">{errors.items}</div>}
+
+        <div className="journal-entry-table" role="table" aria-label="Journal line items">
+          <div className="journal-entry-row journal-entry-row-head" role="row">
+            <span role="columnheader">Account</span>
+            <span role="columnheader">Debit</span>
+            <span role="columnheader">Credit</span>
+            <span role="columnheader" className="journal-entry-actions-head"> </span>
+          </div>
+
+          {form.items.map((item, idx) => (
+            <div key={idx} className="journal-entry-row" role="row">
+              <div className="journal-entry-field" role="cell">
+                <label className="journal-entry-mobile-label" htmlFor={`account-${idx}`}>Account</label>
+                <select
+                  id={`account-${idx}`}
+                  value={item.accountId}
+                  onChange={(e) => updateItem(idx, 'accountId', e.target.value)}
+                >
+                  <option value="">Select account...</option>
+                  {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+                </select>
+              </div>
+              <div className="journal-entry-field" role="cell">
+                <label className="journal-entry-mobile-label" htmlFor={`debit-${idx}`}>Debit</label>
+                <input
+                  id={`debit-${idx}`}
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={item.debit}
+                  onChange={(e) => updateItem(idx, 'debit', e.target.value)}
+                />
+              </div>
+              <div className="journal-entry-field" role="cell">
+                <label className="journal-entry-mobile-label" htmlFor={`credit-${idx}`}>Credit</label>
+                <input
+                  id={`credit-${idx}`}
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={item.credit}
+                  onChange={(e) => updateItem(idx, 'credit', e.target.value)}
+                />
+              </div>
+              <div className="journal-entry-field journal-entry-field-action" role="cell">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="btn-sm"
+                  onClick={() => removeItem(idx)}
+                  disabled={form.items.length <= 2}
+                >
+                  Remove
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
-      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+
+      <div className={`journal-entry-totals ${isBalanced ? 'is-balanced' : 'is-unbalanced'}`}>
+        <div className="journal-entry-total">
+          <span className="journal-entry-total-label">Total Debit</span>
+          <span className="journal-entry-total-value">{formatCurrency(totalDebit)}</span>
+        </div>
+        <div className="journal-entry-total">
+          <span className="journal-entry-total-label">Total Credit</span>
+          <span className="journal-entry-total-value">{formatCurrency(totalCredit)}</span>
+        </div>
+        {!isBalanced && (
+          <p className="form-error journal-entry-balance-error">Entry must be balanced before posting</p>
+        )}
+      </div>
+
+      <div className="journal-entry-form-actions">
         <Button type="submit" disabled={!isBalanced}>{submitLabel}</Button>
       </div>
     </form>

@@ -1,0 +1,369 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  ACCOUNTANT
+  CONTACT
+}
+
+enum ContactType {
+  CUSTOMER
+  VENDOR
+  BOTH
+}
+
+enum RecordStatus {
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+enum AccountType {
+  ASSET
+  LIABILITY
+  EQUITY
+  REVENUE
+  EXPENSE
+}
+
+enum JournalType {
+  SALE
+  PURCHASE
+  BANK
+  CASH
+  GENERAL
+}
+
+enum JournalEntryStatus {
+  DRAFT
+  POSTED
+  CANCELLED
+}
+
+enum OrderStatus {
+  DRAFT
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum InvoiceStatus {
+  DRAFT
+  POSTED
+  PAID
+  CANCELLED
+}
+
+enum PaymentStatus {
+  DRAFT
+  POSTED
+  RECONCILED
+  CANCELLED
+}
+
+enum PaymentType {
+  INBOUND
+  OUTBOUND
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  role         UserRole @default(ACCOUNTANT)
+  contactId    String?  @unique
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  contact        Contact?       @relation(fields: [contactId], references: [id])
+  journalEntries JournalEntry[]
+
+  @@index([role])
+  @@index([contactId])
+}
+
+model Contact {
+  id        String       @id @default(cuid())
+  name      String
+  email     String       @unique
+  phone     String?
+  address   String?
+  type      ContactType  @default(CUSTOMER)
+  status    RecordStatus @default(ACTIVE)
+  taxId     String?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  user             User?
+  purchaseOrders   PurchaseOrder[]
+  vendorBills      VendorBill[]
+  salesOrders      SalesOrder[]
+  customerInvoices CustomerInvoice[]
+  payments         Payment[]
+
+  @@index([status])
+  @@index([type])
+  @@index([name])
+}
+
+model Product {
+  id          String       @id @default(cuid())
+  sku         String       @unique
+  name        String
+  description String?
+  unitPrice   Decimal      @db.Decimal(12, 2)
+  costPrice   Decimal      @default(0) @db.Decimal(12, 2)
+  incomeAccountId  String?
+  expenseAccountId String?
+  status      RecordStatus @default(ACTIVE)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  incomeAccount  Account? @relation("ProductIncomeAccount", fields: [incomeAccountId], references: [id])
+  expenseAccount Account? @relation("ProductExpenseAccount", fields: [expenseAccountId], references: [id])
+
+  @@index([status])
+  @@index([name])
+  @@index([incomeAccountId])
+  @@index([expenseAccountId])
+}
+
+model Account {
+  id        String       @id @default(cuid())
+  code      String       @unique
+  name      String
+  type      AccountType
+  parentId  String?
+  isActive  Boolean      @default(true)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  parent   Account?  @relation("AccountHierarchy", fields: [parentId], references: [id])
+  children Account[] @relation("AccountHierarchy")
+
+  journalItems       JournalItem[]
+  defaultJournals    Journal[]
+  productIncome      Product[]     @relation("ProductIncomeAccount")
+  productExpense     Product[]     @relation("ProductExpenseAccount")
+  budgets            Budget[]
+  analyticAccounts   AnalyticAccount[]
+
+  @@index([type])
+  @@index([parentId])
+  @@index([isActive])
+}
+
+model Journal {
+  id               String      @id @default(cuid())
+  code             String      @unique
+  name             String
+  type             JournalType @default(GENERAL)
+  defaultAccountId String?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  defaultAccount Account?       @relation(fields: [defaultAccountId], references: [id])
+  entries        JournalEntry[]
+
+  @@index([type])
+  @@index([defaultAccountId])
+}
+
+model JournalEntry {
+  id          String             @id @default(cuid())
+  journalId   String
+  date        DateTime           @db.Date
+  reference   String?
+  description String?
+  status      JournalEntryStatus @default(DRAFT)
+  createdById String
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  journal   Journal       @relation(fields: [journalId], references: [id])
+  createdBy User          @relation(fields: [createdById], references: [id])
+  items     JournalItem[]
+
+  @@index([journalId])
+  @@index([createdById])
+  @@index([status])
+  @@index([date])
+}
+
+model JournalItem {
+  id                 String   @id @default(cuid())
+  journalEntryId     String
+  accountId          String
+  analyticAccountId  String?
+  debit              Decimal  @default(0) @db.Decimal(14, 2)
+  credit             Decimal  @default(0) @db.Decimal(14, 2)
+  description        String?
+  createdAt          DateTime @default(now())
+
+  journalEntry    JournalEntry     @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
+  account         Account          @relation(fields: [accountId], references: [id])
+  analyticAccount AnalyticAccount? @relation(fields: [analyticAccountId], references: [id])
+
+  @@index([journalEntryId])
+  @@index([accountId])
+  @@index([analyticAccountId])
+}
+
+model PurchaseOrder {
+  id          String      @id @default(cuid())
+  number      String      @unique
+  contactId   String
+  orderDate   DateTime    @db.Date
+  status      OrderStatus @default(DRAFT)
+  totalAmount Decimal     @default(0) @db.Decimal(14, 2)
+  notes       String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  contact     Contact      @relation(fields: [contactId], references: [id])
+  vendorBills VendorBill[]
+
+  @@index([contactId])
+  @@index([status])
+  @@index([orderDate])
+}
+
+model VendorBill {
+  id              String        @id @default(cuid())
+  number          String        @unique
+  contactId       String
+  purchaseOrderId String?
+  billDate        DateTime      @db.Date
+  dueDate         DateTime?     @db.Date
+  status          InvoiceStatus @default(DRAFT)
+  totalAmount     Decimal       @default(0) @db.Decimal(14, 2)
+  taxAmount       Decimal       @default(0) @db.Decimal(14, 2)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  contact       Contact        @relation(fields: [contactId], references: [id])
+  purchaseOrder PurchaseOrder? @relation(fields: [purchaseOrderId], references: [id])
+  payments      Payment[]
+
+  @@index([contactId])
+  @@index([purchaseOrderId])
+  @@index([status])
+  @@index([billDate])
+  @@index([dueDate])
+}
+
+model SalesOrder {
+  id          String      @id @default(cuid())
+  number      String      @unique
+  contactId   String
+  orderDate   DateTime    @db.Date
+  status      OrderStatus @default(DRAFT)
+  totalAmount Decimal     @default(0) @db.Decimal(14, 2)
+  notes       String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  contact          Contact           @relation(fields: [contactId], references: [id])
+  customerInvoices CustomerInvoice[]
+
+  @@index([contactId])
+  @@index([status])
+  @@index([orderDate])
+}
+
+model CustomerInvoice {
+  id           String        @id @default(cuid())
+  number       String        @unique
+  contactId    String
+  salesOrderId String?
+  invoiceDate  DateTime      @db.Date
+  dueDate      DateTime?     @db.Date
+  status       InvoiceStatus @default(DRAFT)
+  totalAmount  Decimal       @default(0) @db.Decimal(14, 2)
+  taxAmount    Decimal       @default(0) @db.Decimal(14, 2)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  contact    Contact     @relation(fields: [contactId], references: [id])
+  salesOrder SalesOrder? @relation(fields: [salesOrderId], references: [id])
+  payments   Payment[]
+
+  @@index([contactId])
+  @@index([salesOrderId])
+  @@index([status])
+  @@index([invoiceDate])
+  @@index([dueDate])
+}
+
+model Payment {
+  id                String        @id @default(cuid())
+  number            String        @unique
+  contactId         String
+  paymentDate       DateTime      @db.Date
+  amount            Decimal       @db.Decimal(14, 2)
+  type              PaymentType
+  status            PaymentStatus @default(DRAFT)
+  customerInvoiceId String?
+  vendorBillId      String?
+  reference         String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  contact         Contact          @relation(fields: [contactId], references: [id])
+  customerInvoice CustomerInvoice? @relation(fields: [customerInvoiceId], references: [id])
+  vendorBill      VendorBill?      @relation(fields: [vendorBillId], references: [id])
+
+  @@index([contactId])
+  @@index([customerInvoiceId])
+  @@index([vendorBillId])
+  @@index([status])
+  @@index([paymentDate])
+  @@index([type])
+}
+
+model AnalyticAccount {
+  id        String       @id @default(cuid())
+  code      String       @unique
+  name      String
+  accountId String?
+  status    RecordStatus @default(ACTIVE)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  account      Account?      @relation(fields: [accountId], references: [id])
+  journalItems JournalItem[]
+  budgets      Budget[]
+
+  @@index([accountId])
+  @@index([status])
+}
+
+model Budget {
+  id                String   @id @default(cuid())
+  accountId         String
+  analyticAccountId String?
+  fiscalYear        Int
+  period            Int
+  plannedAmount     Decimal  @db.Decimal(14, 2)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  account         Account          @relation(fields: [accountId], references: [id])
+  analyticAccount AnalyticAccount? @relation(fields: [analyticAccountId], references: [id])
+
+  @@unique([accountId, analyticAccountId, fiscalYear, period])
+  @@index([accountId])
+  @@index([analyticAccountId])
+  @@index([fiscalYear])
+  @@index([period])
+}

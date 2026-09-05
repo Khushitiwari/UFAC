@@ -8,4 +8,6 @@ export const canWrite = (user) => isStaff(user);
 
 export const canDelete = (user) => isAdmin(user);
 
+export const canManagePortalUsers = (user) => isAdmin(user);
+
 export const canViewReports = (user) => isStaff(user);

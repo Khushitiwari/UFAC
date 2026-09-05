@@ -1,37 +1,29 @@
 import Button from './Button.jsx';
 
-const Modal = ({ isOpen, onClose, title, children, footer }) => {
+const sizeClass = {
+  md: 'modal-panel-md',
+  lg: 'modal-panel-lg',
+};
+
+const Modal = ({ isOpen, onClose, title, children, footer, size = 'md' }) => {
   if (!isOpen) return null;
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(0,0,0,0.45)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000,
-        padding: '1rem',
-      }}
-      onClick={onClose}
-    >
+    <div className="modal-overlay" onClick={onClose}>
       <div
-        className="card"
-        style={{ width: '100%', maxWidth: 520, maxHeight: '90vh', overflow: 'auto' }}
+        className={`modal-panel card ${sizeClass[size] || sizeClass.md}`}
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <h3 style={{ margin: 0, color: 'var(--color-primary)' }}>{title}</h3>
-          <Button variant="secondary" onClick={onClose} style={{ padding: '0.3rem 0.6rem' }}>
+        <div className="modal-header">
+          <h3 className="modal-title">{title}</h3>
+          <Button variant="secondary" onClick={onClose} className="modal-close-btn">
             ✕
           </Button>
         </div>
-        {children}
-        {footer && <div style={{ marginTop: '1.25rem', display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>{footer}</div>}
+        <div className="modal-body">{children}</div>
+        {footer && <div className="modal-footer">{footer}</div>}
       </div>
     </div>
   );

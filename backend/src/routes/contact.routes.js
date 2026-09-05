@@ -3,6 +3,7 @@ import {
   listContacts,
   getContact,
   createContact,
+  createPortalUser,
   updateContact,
   deleteContact,
 } from '../controllers/contact.controller.js';
@@ -12,6 +13,7 @@ import { validate } from '../middlewares/validate.middleware.js';
 import {
   createContactSchema,
   updateContactSchema,
+  createPortalUserSchema,
   contactIdParamSchema,
   listContactsQuerySchema,
 } from '../validators/contact.schema.js';
@@ -27,6 +29,13 @@ router.post(
   requireRole('ADMIN', 'ACCOUNTANT'),
   validate(createContactSchema),
   createContact,
+);
+router.post(
+  '/:id/portal-user',
+  requireRole('ADMIN'),
+  validate(contactIdParamSchema, 'params'),
+  validate(createPortalUserSchema),
+  createPortalUser,
 );
 router.put(
   '/:id',

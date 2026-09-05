@@ -13,8 +13,15 @@ export const getContact = asyncHandler(async (req, res) => {
 });
 
 export const createContact = asyncHandler(async (req, res) => {
-  const contact = await contactService.createContact(req.body);
+  const contact = await contactService.createContact(req.body, {
+    allowPortalUser: req.user.role === 'ADMIN',
+  });
   sendResponse(res, new ApiResponse(201, contact, 'Contact created'));
+});
+
+export const createPortalUser = asyncHandler(async (req, res) => {
+  const contact = await contactService.createPortalUser(req.params.id, req.body);
+  sendResponse(res, new ApiResponse(201, contact, 'Portal user created'));
 });
 
 export const updateContact = asyncHandler(async (req, res) => {
@@ -31,6 +38,7 @@ export default {
   listContacts,
   getContact,
   createContact,
+  createPortalUser,
   updateContact,
   deleteContact,
 };

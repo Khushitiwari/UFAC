@@ -32,7 +32,7 @@ See **[SETUP.md](./SETUP.md)** for full copy-paste setup (Docker Postgres + nati
 ### Short version
 
 ```bash
-cp .env.example .env && docker compose up -d
+docker compose up -d
 cd backend && npm install && cp .env.example .env
 npx prisma migrate dev && node prisma/seed.js && npm run dev
 # second terminal: cd frontend && npm install && npm run dev

@@ -12,16 +12,13 @@ Postgres runs in Docker; the backend and frontend run natively with `npm run dev
 From the **project root** (`UFAC/`, not `backend/`):
 
 ```bash
-# 1. Configure Docker Postgres credentials
-cp .env.example .env
-
-# 2. Start PostgreSQL (run from project root — where docker-compose.yml lives)
+# 1. Start PostgreSQL (docker-compose.yml lives at project root)
 docker compose up -d
 
-# 3. Backend
+# 2. Backend
 cd backend
 npm install
-cp .env.example .env
+cp .env.example .env   # set DATABASE_URL to match docker-compose.yml
 npx prisma migrate dev
 npx prisma generate
 node prisma/seed.js
@@ -86,4 +83,4 @@ node prisma/seed.js
 
 ## Port conflicts
 
-UFAC Postgres runs on host port **5437** (see `docker-compose.yml`). Copy `.env.example` to `.env` and set your own credentials. Ensure `DATABASE_URL` in `backend/.env` uses `@localhost:5437` and database name `ufac`.
+UFAC Postgres runs on host port **5437** (see `docker-compose.yml`). Set `DATABASE_URL` in `backend/.env` to match the user, password, port, and database name in `docker-compose.yml`.

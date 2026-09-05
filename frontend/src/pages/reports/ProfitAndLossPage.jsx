@@ -1,9 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { reportsApi } from '../../api/index.js';
 import PageShell from '../../components/common/PageShell.jsx';
 import Button from '../../components/common/Button.jsx';
 import TableSkeleton from '../../components/common/TableSkeleton.jsx';
+import ReportLoadTransition from '../../components/reports/ReportLoadTransition.jsx';
+import ReportSectionCard from '../../components/reports/ReportSectionCard.jsx';
+import ReportFiltersBar from '../../components/reports/ReportFiltersBar.jsx';
+import { staggerContainer, summaryCardVariant } from '../../components/reports/reportMotion.js';
 import { formatCurrency, formatDate } from '../../utils/format.js';
 import { toDateInput } from '../../utils/formHelpers.js';
 
@@ -55,40 +60,46 @@ const ProfitAndLossPage = () => {
       subtitle={periodLabel}
       actions={<Link to="/reports"><Button variant="secondary">Back</Button></Link>}
     >
-      <div style={{ marginBottom: '1rem', display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+      <ReportFiltersBar onRefresh={fetchReport} loading={loading}>
         <label>From <input type="date" value={start} onChange={(e) => setStart(e.target.value)} /></label>
         <label>To <input type="date" value={end} onChange={(e) => setEnd(e.target.value)} /></label>
-        <Button variant="secondary" onClick={fetchReport}>Refresh</Button>
-      </div>
-      {error && <div className="alert-error">{error}</div>}
-      {loading && !report ? (
-        <TableSkeleton columns={2} rows={8} />
-      ) : (
-        <>
-          {sections.map((section) => (
-            <div key={section.title} className="card" style={{ marginBottom: '1rem' }}>
-              <h3>{section.title}</h3>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <tbody>
-                  {(section.items || []).map((item) => (
-                    <tr key={item.accountId || item.name} style={{ borderBottom: '1px solid var(--color-border)' }}>
-                      <td style={{ padding: '0.5rem' }}>{item.name || item.account?.name}</td>
-                      <td style={{ padding: '0.5rem', textAlign: 'right' }}>{formatCurrency(item.balance ?? item.amount)}</td>
-                    </tr>
-                  ))}
-                  <tr style={{ fontWeight: 700 }}>
-                    <td style={{ padding: '0.5rem' }}>Total {section.title}</td>
-                    <td style={{ padding: '0.5rem', textAlign: 'right' }}>{formatCurrency(section.total)}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          ))}
-          <div className="card" style={{ fontWeight: 700 }}>
-            Net Income: {formatCurrency(netIncome)}
-          </div>
-        </>
+      </ReportFiltersBar>
+
+      {error && (
+        <motion.div
+          className="alert-error"
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.25 }}
+        >
+          {error}
+        </motion.div>
       )}
+
+      <ReportLoadTransition
+        loading={loading}
+        hasData={!!report}
+        skeleton={<TableSkeleton columns={2} rows={8} />}
+      >
+        <motion.div
+          key={`${start}-${end}-${report?.netIncome ?? 0}`}
+          variants={staggerContainer}
+          initial="initial"
+          animate="animate"
+        >
+          {sections.map((section) => (
+            <ReportSectionCard
+              key={section.title}
+              title={section.title}
+              items={section.items}
+              total={section.total}
+            />
+          ))}
+          <motion.div className="card report-summary-card" variants={summaryCardVariant} layout>
+            Net Income: {formatCurrency(netIncome)}
+          </motion.div>
+        </motion.div>
+      </ReportLoadTransition>
     </PageShell>
   );
 };

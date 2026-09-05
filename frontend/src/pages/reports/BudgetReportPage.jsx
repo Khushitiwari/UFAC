@@ -1,9 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { reportsApi } from '../../api/index.js';
 import PageShell from '../../components/common/PageShell.jsx';
 import Button from '../../components/common/Button.jsx';
 import TableSkeleton from '../../components/common/TableSkeleton.jsx';
+import ReportLoadTransition from '../../components/reports/ReportLoadTransition.jsx';
+import ReportFiltersBar from '../../components/reports/ReportFiltersBar.jsx';
+import { tableRowVariant } from '../../components/reports/reportMotion.js';
 import { formatCurrency } from '../../utils/format.js';
 import { toDateInput } from '../../utils/formHelpers.js';
 
@@ -42,44 +46,68 @@ const BudgetReportPage = () => {
 
   return (
     <PageShell title="Budget Variance" actions={<Link to="/reports"><Button variant="secondary">Back</Button></Link>}>
-      <div style={{ marginBottom: '1rem', display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+      <ReportFiltersBar onRefresh={fetchReport} loading={loading}>
         <label>From <input type="date" value={periodStart} onChange={(e) => setPeriodStart(e.target.value)} /></label>
         <label>To <input type="date" value={periodEnd} onChange={(e) => setPeriodEnd(e.target.value)} /></label>
-        <Button variant="secondary" onClick={fetchReport}>Refresh</Button>
-      </div>
-      {error && <div className="alert-error">{error}</div>}
-      {loading && !report ? (
-        <TableSkeleton columns={4} rows={6} />
-      ) : (
-        <div className={`report-table-card ${loading ? 'is-refreshing' : ''}`}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+      </ReportFiltersBar>
+
+      {error && (
+        <motion.div
+          className="alert-error"
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.25 }}
+        >
+          {error}
+        </motion.div>
+      )}
+
+      <ReportLoadTransition
+        loading={loading}
+        hasData={!!report}
+        skeleton={<TableSkeleton columns={4} rows={6} />}
+      >
+        <div className="report-table-card">
+          <table className="report-budget-table">
             <thead>
-              <tr style={{ borderBottom: '2px solid var(--color-border)' }}>
-                <th style={{ textAlign: 'left', padding: '0.5rem' }}>Budget</th>
-                <th style={{ textAlign: 'right', padding: '0.5rem' }}>Planned</th>
-                <th style={{ textAlign: 'right', padding: '0.5rem' }}>Actual</th>
-                <th style={{ textAlign: 'right', padding: '0.5rem' }}>Variance</th>
+              <tr>
+                <th>Budget</th>
+                <th>Planned</th>
+                <th>Actual</th>
+                <th>Variance</th>
               </tr>
             </thead>
             <tbody>
-              {rows.map((row) => (
-                <tr key={row.id || row.name} style={{ borderBottom: '1px solid var(--color-border)' }}>
-                  <td style={{ padding: '0.5rem' }}>{row.name || row.analyticAccount?.name}</td>
-                  <td style={{ padding: '0.5rem', textAlign: 'right' }}>{formatCurrency(row.plannedAmount)}</td>
-                  <td style={{ padding: '0.5rem', textAlign: 'right' }}>{formatCurrency(row.actualAmount ?? row.actual)}</td>
-                  <td style={{ padding: '0.5rem', textAlign: 'right' }}>{formatCurrency(row.variance ?? (row.plannedAmount - (row.actualAmount || row.actual || 0)))}</td>
-                </tr>
+              {rows.map((row, index) => (
+                <motion.tr
+                  key={row.id || row.name}
+                  variants={tableRowVariant}
+                  initial="initial"
+                  animate="animate"
+                  transition={{ delay: index * 0.04 }}
+                >
+                  <td>{row.name || row.analyticAccount?.name}</td>
+                  <td>{formatCurrency(row.plannedAmount)}</td>
+                  <td>{formatCurrency(row.actualAmount ?? row.actual)}</td>
+                  <td>{formatCurrency(row.variance ?? (row.plannedAmount - (row.actualAmount || row.actual || 0)))}</td>
+                </motion.tr>
               ))}
-              <tr style={{ fontWeight: 700 }}>
-                <td style={{ padding: '0.5rem' }}>Totals</td>
-                <td style={{ padding: '0.5rem', textAlign: 'right' }}>{formatCurrency(totals.planned)}</td>
-                <td style={{ padding: '0.5rem', textAlign: 'right' }}>{formatCurrency(totals.actual)}</td>
-                <td style={{ padding: '0.5rem', textAlign: 'right' }}>{formatCurrency(totals.variance)}</td>
-              </tr>
+              <motion.tr
+                className="report-budget-total"
+                variants={tableRowVariant}
+                initial="initial"
+                animate="animate"
+                transition={{ delay: rows.length * 0.04 + 0.05 }}
+              >
+                <td>Totals</td>
+                <td>{formatCurrency(totals.planned)}</td>
+                <td>{formatCurrency(totals.actual)}</td>
+                <td>{formatCurrency(totals.variance)}</td>
+              </motion.tr>
             </tbody>
           </table>
         </div>
-      )}
+      </ReportLoadTransition>
     </PageShell>
   );
 };

@@ -179,14 +179,7 @@ a:hover {
 }
 
 .page-transition {
-  opacity: 0;
-  transform: translateY(6px);
-  transition: opacity 0.22s ease, transform 0.22s ease;
-}
-
-.page-transition-visible {
-  opacity: 1;
-  transform: translateY(0);
+  width: 100%;
 }
 
 .page-header {
@@ -465,6 +458,92 @@ a:hover {
 
 .report-table-card {
   overflow-x: auto;
+}
+
+.report-filters-bar {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.report-refresh-indicator {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: report-spin 0.7s linear infinite;
+}
+
+.report-load-content.is-refreshing {
+  opacity: 0.62;
+  pointer-events: none;
+  filter: blur(0.4px);
+  transition: opacity 0.28s ease, filter 0.28s ease;
+}
+
+.report-section-card {
+  margin-bottom: 1rem;
+}
+
+.report-section-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.report-section-row td {
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.report-section-row td:last-child,
+.report-section-total td:last-child {
+  text-align: right;
+}
+
+.report-section-total {
+  font-weight: 700;
+}
+
+.report-section-total td {
+  padding: 0.5rem;
+}
+
+.report-summary-card {
+  font-weight: 700;
+}
+
+.report-budget-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.report-budget-table thead tr {
+  border-bottom: 2px solid var(--color-border);
+}
+
+.report-budget-table th,
+.report-budget-table td {
+  padding: 0.5rem;
+}
+
+.report-budget-table th:not(:first-child),
+.report-budget-table td:not(:first-child) {
+  text-align: right;
+}
+
+.report-budget-table tbody tr {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.report-budget-total {
+  font-weight: 700;
+}
+
+@keyframes report-spin {
+  to { transform: rotate(360deg); }
 }
 
 .form-error {

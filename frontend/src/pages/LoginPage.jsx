@@ -32,8 +32,11 @@ const LoginPage = () => {
   return (
     <div className="login-page">
       <div className="login-card">
-        <h2>UFAC</h2>
-        <p>Urban Furniture Accounting System</p>
+        <div className="login-brand">
+          <div className="login-logo">UF</div>
+          <h2>Welcome back</h2>
+          <p className="subtitle">Sign in to Urban Furniture Accounting</p>
+        </div>
         {error && <div className="alert-error">{error}</div>}
         <form onSubmit={handleSubmit}>
           <div className="form-group">
@@ -44,6 +47,7 @@ const LoginPage = () => {
               value={form.email}
               onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
               placeholder="admin@ufac.local"
+              autoComplete="email"
             />
           </div>
           <div className="form-group">
@@ -53,9 +57,10 @@ const LoginPage = () => {
               type="password"
               value={form.password}
               onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
+              autoComplete="current-password"
             />
           </div>
-          <Button type="submit" disabled={loading} style={{ width: '100%' }}>
+          <Button type="submit" disabled={loading} className="btn-block">
             {loading ? 'Signing in...' : 'Sign In'}
           </Button>
         </form>

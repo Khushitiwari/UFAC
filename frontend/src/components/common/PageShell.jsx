@@ -1,8 +1,11 @@
-const PageShell = ({ title, children, actions }) => (
+const PageShell = ({ title, subtitle, children, actions }) => (
   <>
     <div className="page-header">
-      <h2>{title}</h2>
-      {actions}
+      <div className="page-header-text">
+        <h2>{title}</h2>
+        {subtitle && <p>{subtitle}</p>}
+      </div>
+      {actions && <div className="page-header-actions">{actions}</div>}
     </div>
     <div className="card">{children}</div>
   </>

@@ -1,32 +1,22 @@
+import Icon from './Icon.jsx';
+
 const Table = ({ columns, data, onRowClick, emptyMessage = 'No records found' }) => {
   if (!data?.length) {
     return (
-      <p style={{ color: 'var(--color-muted)', textAlign: 'center', padding: '2rem' }}>
-        {emptyMessage}
-      </p>
+      <div className="empty-state">
+        <Icon name="search" size={40} />
+        <p>{emptyMessage}</p>
+      </div>
     );
   }
 
   return (
-    <div style={{ overflowX: 'auto' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+    <div className="table-wrapper">
+      <table className="data-table">
         <thead>
-          <tr style={{ background: 'var(--color-bg)', borderBottom: '2px solid var(--color-border)' }}>
+          <tr>
             {columns.map((col) => (
-              <th
-                key={col.key}
-                style={{
-                  textAlign: 'left',
-                  padding: '0.75rem 1rem',
-                  fontWeight: 600,
-                  color: 'var(--color-muted)',
-                  fontSize: '0.8rem',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.04em',
-                }}
-              >
-                {col.label}
-              </th>
+              <th key={col.key}>{col.label}</th>
             ))}
           </tr>
         </thead>
@@ -35,15 +25,10 @@ const Table = ({ columns, data, onRowClick, emptyMessage = 'No records found' })
             <tr
               key={row.id || idx}
               onClick={() => onRowClick?.(row)}
-              style={{
-                borderBottom: '1px solid var(--color-border)',
-                cursor: onRowClick ? 'pointer' : 'default',
-              }}
+              className={onRowClick ? 'clickable' : undefined}
             >
               {columns.map((col) => (
-                <td key={col.key} style={{ padding: '0.75rem 1rem' }}>
-                  {col.render ? col.render(row) : row[col.key]}
-                </td>
+                <td key={col.key}>{col.render ? col.render(row) : row[col.key]}</td>
               ))}
             </tr>
           ))}

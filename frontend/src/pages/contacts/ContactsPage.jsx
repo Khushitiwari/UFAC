@@ -4,10 +4,20 @@ import PageShell from '../../components/common/PageShell.jsx';
 import Table from '../../components/common/Table.jsx';
 import Modal from '../../components/common/Modal.jsx';
 import Button from '../../components/common/Button.jsx';
+import Icon from '../../components/common/Icon.jsx';
 import ContactForm from '../../components/forms/ContactForm.jsx';
 import LoadingSpinner from '../../components/common/LoadingSpinner.jsx';
 import { useDebounce } from '../../hooks/useDebounce.js';
 import { usePagination } from '../../hooks/usePagination.js';
+
+const statusBadge = (status) => {
+  const map = {
+    active: 'badge--success',
+    inactive: 'badge--muted',
+    pending: 'badge--warning',
+  };
+  return <span className={`badge ${map[status?.toLowerCase()] || 'badge--muted'}`}>{status}</span>;
+};
 
 const ContactsPage = () => {
   const [contacts, setContacts] = useState([]);
@@ -41,8 +51,16 @@ const ContactsPage = () => {
     () => [
       { key: 'name', label: 'Name' },
       { key: 'email', label: 'Email' },
-      { key: 'type', label: 'Type' },
-      { key: 'status', label: 'Status' },
+      {
+        key: 'type',
+        label: 'Type',
+        render: (row) => <span className="badge badge--primary">{row.type}</span>,
+      },
+      {
+        key: 'status',
+        label: 'Status',
+        render: (row) => statusBadge(row.status),
+      },
       {
         key: 'phone',
         label: 'Phone',
@@ -69,29 +87,31 @@ const ContactsPage = () => {
   return (
     <PageShell
       title="Contacts"
-      actions={
-        <Button onClick={() => setModalOpen(true)}>+ New Contact</Button>
-      }
+      subtitle="Manage customers, vendors, and business partners"
+      actions={<Button onClick={() => setModalOpen(true)}>+ New Contact</Button>}
     >
-      <div style={{ marginBottom: '1rem' }}>
-        <input
-          placeholder="Search contacts..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={{ padding: '0.5rem 0.75rem', borderRadius: 'var(--radius)', border: '1px solid var(--color-border)', width: '280px' }}
-        />
+      <div className="search-bar">
+        <div className="search-wrapper">
+          <Icon name="search" size={16} />
+          <input
+            className="search-input"
+            placeholder="Search contacts..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
       </div>
       {error && <div className="alert-error">{error}</div>}
       {loading ? <LoadingSpinner label="Loading contacts..." /> : <Table columns={columns} data={contacts} />}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem' }}>
-        <span style={{ fontSize: '0.85rem', color: 'var(--color-muted)' }}>
+      <div className="pagination">
+        <span className="pagination-info">
           Page {meta.page} of {meta.totalPages} ({meta.total} total)
         </span>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <Button variant="secondary" onClick={prevPage} disabled={page <= 1}>
+        <div className="pagination-actions">
+          <Button variant="secondary" size="sm" onClick={prevPage} disabled={page <= 1}>
             Previous
           </Button>
-          <Button variant="secondary" onClick={nextPage} disabled={page >= (meta.totalPages || 1)}>
+          <Button variant="secondary" size="sm" onClick={nextPage} disabled={page >= (meta.totalPages || 1)}>
             Next
           </Button>
         </div>

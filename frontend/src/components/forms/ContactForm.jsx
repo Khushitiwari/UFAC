@@ -70,7 +70,7 @@ const ContactForm = ({ initialValues, onSubmit, onCancel, submitLabel = 'Save Co
         <label htmlFor="taxId">Tax ID</label>
         <input id="taxId" name="taxId" value={form.taxId || ''} onChange={handleChange} />
       </div>
-      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+      <div className="modal-footer" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>
         {onCancel && (
           <Button type="button" variant="secondary" onClick={onCancel}>
             Cancel

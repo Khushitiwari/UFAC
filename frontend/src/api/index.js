@@ -16,6 +16,7 @@ import dashboardApiModule from './dashboard.js';
 
 export const authApi = {
   login: (credentials) => axiosClient.post('/auth/login', credentials),
+  register: (payload) => axiosClient.post('/auth/register', payload),
   me: () => axiosClient.get('/auth/me'),
 };
 

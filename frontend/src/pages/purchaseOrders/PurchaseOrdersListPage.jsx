@@ -6,7 +6,6 @@ import Table from '../../components/common/Table.jsx';
 import Modal from '../../components/common/Modal.jsx';
 import Button from '../../components/common/Button.jsx';
 import PurchaseOrderForm from '../../components/forms/PurchaseOrderForm.jsx';
-import LoadingSpinner from '../../components/common/LoadingSpinner.jsx';
 import PaginationBar from '../../components/common/PaginationBar.jsx';
 import { usePurchaseOrders } from '../../hooks/usePurchaseOrders.js';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -20,7 +19,7 @@ const PurchaseOrdersListPage = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [contacts, setContacts] = useState([]);
   const [products, setProducts] = useState([]);
-  const { items, meta, loading, error, refetch, page, nextPage, prevPage } = usePurchaseOrders();
+  const { items, meta, loading, refreshing, error, refetch, page, nextPage, prevPage } = usePurchaseOrders();
 
   useEffect(() => {
     (async () => {
@@ -50,7 +49,7 @@ const PurchaseOrdersListPage = () => {
   return (
     <PageShell title="Purchase Orders" actions={write ? <Button onClick={() => setModalOpen(true)}>+ New PO</Button> : null}>
       {error && <div className="alert-error">{error}</div>}
-      {loading ? <LoadingSpinner /> : <Table columns={columns} data={items} onRowClick={(r) => navigate(`/purchase-orders/${r.id}`)} />}
+      <Table loading={loading} refreshing={refreshing} columns={columns} data={items} onRowClick={(r) => navigate(`/purchase-orders/${r.id}`)} />
       <PaginationBar meta={meta} page={page} onPrev={prevPage} onNext={nextPage} />
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="New Purchase Order">
         <PurchaseOrderForm contacts={contacts} products={products} onSubmit={handleCreate} onCancel={() => setModalOpen(false)} />

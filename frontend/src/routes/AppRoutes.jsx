@@ -2,10 +2,11 @@ import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import Layout from '../components/common/Layout.jsx';
-import LoadingSpinner from '../components/common/LoadingSpinner.jsx';
+import PageSkeleton from '../components/common/PageSkeleton.jsx';
 import { canViewReports } from '../utils/permissions.js';
 
 const LoginPage = lazy(() => import('../pages/LoginPage.jsx'));
+const SignupPage = lazy(() => import('../pages/SignupPage.jsx'));
 const DashboardPage = lazy(() => import('../pages/dashboard/DashboardPage.jsx'));
 
 const ContactsListPage = lazy(() => import('../pages/contacts/ContactsListPage.jsx'));
@@ -50,7 +51,7 @@ const BudgetReportPage = lazy(() => import('../pages/reports/BudgetReportPage.js
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, initializing } = useAuth();
-  if (initializing) return <LoadingSpinner label="Loading session..." />;
+  if (initializing) return <PageSkeleton />;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   return children;
 };
@@ -74,9 +75,10 @@ const ContactHomeRedirect = () => {
 };
 
 const AppRoutes = () => (
-  <Suspense fallback={<LoadingSpinner label="Loading page..." />}>
+  <Suspense fallback={<PageSkeleton />}>
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/signup" element={<SignupPage />} />
       <Route
         element={
           <ProtectedRoute>

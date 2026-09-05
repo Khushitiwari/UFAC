@@ -9,7 +9,11 @@ import { ApiResponse, sendResponse } from '../utils/ApiResponse.js';
 const BCRYPT_ROUNDS = 12;
 
 export const register = asyncHandler(async (req, res) => {
-  const { email, password, name, role } = req.body;
+  const { email, password, name, role = 'ACCOUNTANT' } = req.body;
+
+  if (!['ADMIN', 'ACCOUNTANT'].includes(role)) {
+    throw new ApiError(400, 'Role must be ADMIN or ACCOUNTANT');
+  }
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) throw new ApiError(409, 'Email already registered');
@@ -17,7 +21,7 @@ export const register = asyncHandler(async (req, res) => {
   const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
 
   const user = await prisma.user.create({
-    data: { email, passwordHash, name, role: role || 'ACCOUNTANT' },
+    data: { email, passwordHash, name, role },
     select: { id: true, email: true, name: true, role: true },
   });
 

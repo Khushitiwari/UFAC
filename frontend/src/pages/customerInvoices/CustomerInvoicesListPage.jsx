@@ -6,7 +6,6 @@ import Table from '../../components/common/Table.jsx';
 import Modal from '../../components/common/Modal.jsx';
 import Button from '../../components/common/Button.jsx';
 import CustomerInvoiceForm from '../../components/forms/CustomerInvoiceForm.jsx';
-import LoadingSpinner from '../../components/common/LoadingSpinner.jsx';
 import PaginationBar from '../../components/common/PaginationBar.jsx';
 import { useCustomerInvoices } from '../../hooks/useCustomerInvoices.js';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -20,7 +19,7 @@ const CustomerInvoicesListPage = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [contacts, setContacts] = useState([]);
   const [products, setProducts] = useState([]);
-  const { items, meta, loading, error, refetch, page, nextPage, prevPage } = useCustomerInvoices();
+  const { items, meta, loading, refreshing, error, refetch, page, nextPage, prevPage } = useCustomerInvoices();
 
   useEffect(() => {
     (async () => {
@@ -47,7 +46,7 @@ const CustomerInvoicesListPage = () => {
   return (
     <PageShell title="Customer Invoices" actions={write ? <Button onClick={() => setModalOpen(true)}>+ New Invoice</Button> : null}>
       {error && <div className="alert-error">{error}</div>}
-      {loading ? <LoadingSpinner /> : <Table columns={columns} data={items} onRowClick={(r) => navigate(`/customer-invoices/${r.id}`)} />}
+      <Table loading={loading} refreshing={refreshing} columns={columns} data={items} onRowClick={(r) => navigate(`/customer-invoices/${r.id}`)} />
       <PaginationBar meta={meta} page={page} onPrev={prevPage} onNext={nextPage} />
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="New Customer Invoice">
         <CustomerInvoiceForm contacts={contacts.filter((c) => c.type === 'CUSTOMER' || c.type === 'BOTH')} products={products} onSubmit={handleCreate} onCancel={() => setModalOpen(false)} />

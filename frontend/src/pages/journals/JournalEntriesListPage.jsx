@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import PageShell from '../../components/common/PageShell.jsx';
 import Table from '../../components/common/Table.jsx';
 import Button from '../../components/common/Button.jsx';
-import LoadingSpinner from '../../components/common/LoadingSpinner.jsx';
 import PaginationBar from '../../components/common/PaginationBar.jsx';
 import { useJournalEntries } from '../../hooks/useJournalEntries.js';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -13,7 +12,7 @@ import { formatCurrency, formatDate } from '../../utils/format.js';
 const JournalEntriesListPage = () => {
   const { user } = useAuth();
   const write = canWrite(user);
-  const { items, meta, loading, error, page, nextPage, prevPage } = useJournalEntries();
+  const { items, meta, loading, refreshing, error, page, nextPage, prevPage } = useJournalEntries();
 
   const columns = useMemo(
     () => [
@@ -47,11 +46,13 @@ const JournalEntriesListPage = () => {
       }
     >
       {error && <div className="alert-error">{error}</div>}
-      {loading ? (
-        <LoadingSpinner label="Loading journal entries..." />
-      ) : (
-        <Table columns={columns} data={items} emptyMessage="No journal entries yet" />
-      )}
+      <Table
+        loading={loading}
+        refreshing={refreshing}
+        columns={columns}
+        data={items}
+        emptyMessage="No journal entries yet"
+      />
       <PaginationBar meta={meta} page={page} onPrev={prevPage} onNext={nextPage} />
     </PageShell>
   );

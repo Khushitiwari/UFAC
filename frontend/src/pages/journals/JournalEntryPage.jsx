@@ -31,9 +31,25 @@ const JournalEntryPage = () => {
 
   const handleSubmit = useCallback(
     async (data) => {
-      await journalEntriesApi.create(data);
-      showToast('Journal entry posted', 'success');
-      navigate('/journals/entries');
+      try {
+        await journalEntriesApi.create({
+          ...data,
+          date: data.date instanceof Date ? data.date.toISOString().slice(0, 10) : data.date,
+          reference: data.reference?.trim() || undefined,
+          items: data.items.map(({ accountId, debit, credit, description, analyticAccountId }) => ({
+            accountId,
+            debit,
+            credit,
+            ...(description?.trim() ? { description: description.trim() } : {}),
+            ...(analyticAccountId ? { analyticAccountId } : {}),
+          })),
+        });
+        showToast('Journal entry posted', 'success');
+        navigate('/journals/entries');
+      } catch (err) {
+        showToast(err.response?.data?.error || 'Failed to post journal entry', 'error');
+        throw err;
+      }
     },
     [navigate, showToast],
   );

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { reportsApi } from '../../api/index.js';
 import PageShell from '../../components/common/PageShell.jsx';
 import Button from '../../components/common/Button.jsx';
-import LoadingSpinner from '../../components/common/LoadingSpinner.jsx';
+import TableSkeleton from '../../components/common/TableSkeleton.jsx';
 import { formatCurrency } from '../../utils/format.js';
 import { toDateInput } from '../../utils/formHelpers.js';
 
@@ -53,7 +53,9 @@ const ProfitAndLossPage = () => {
         <Button variant="secondary" onClick={fetchReport}>Refresh</Button>
       </div>
       {error && <div className="alert-error">{error}</div>}
-      {loading ? <LoadingSpinner /> : (
+      {loading && !report ? (
+        <TableSkeleton columns={2} rows={8} />
+      ) : (
         <>
           {sections.map((section) => (
             <div key={section.title} className="card" style={{ marginBottom: '1rem' }}>

@@ -6,7 +6,6 @@ import Table from '../../components/common/Table.jsx';
 import Modal from '../../components/common/Modal.jsx';
 import Button from '../../components/common/Button.jsx';
 import PaymentForm from '../../components/forms/PaymentForm.jsx';
-import LoadingSpinner from '../../components/common/LoadingSpinner.jsx';
 import PaginationBar from '../../components/common/PaginationBar.jsx';
 import { usePayments } from '../../hooks/usePayments.js';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -19,7 +18,7 @@ const PaymentsListPage = () => {
   const { user } = useAuth();
   const { showToast } = useToast();
   const write = canWrite(user);
-  const { items, meta, loading, error, refetch, page, nextPage, prevPage } = usePayments();
+  const { items, meta, loading, refreshing, error, refetch, page, nextPage, prevPage } = usePayments();
   const [modalOpen, setModalOpen] = useState(false);
   const [contacts, setContacts] = useState([]);
   const [bills, setBills] = useState([]);
@@ -60,7 +59,7 @@ const PaymentsListPage = () => {
       actions={write ? <Button onClick={() => setModalOpen(true)}>+ Record Payment</Button> : null}
     >
       {error && <div className="alert-error">{error}</div>}
-      {loading ? <LoadingSpinner /> : <Table columns={columns} data={items} onRowClick={(r) => navigate(`/payments/${r.id}`)} />}
+      <Table loading={loading} refreshing={refreshing} columns={columns} data={items} onRowClick={(r) => navigate(`/payments/${r.id}`)} />
       <PaginationBar meta={meta} page={page} onPrev={prevPage} onNext={nextPage} />
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="Record Payment">
         <PaymentForm

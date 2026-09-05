@@ -11,7 +11,7 @@ export const journalItemSchema = z.object({
 
 export const createJournalEntrySchema = z
   .object({
-    journalId: z.string().cuid(),
+    journalId: z.string().min(1, 'Journal is required'),
     date: z.coerce.date(),
     reference: z.string().max(100).optional().nullable(),
     sourceType: sourceTypeEnum.optional().nullable(),
@@ -38,5 +38,5 @@ export const journalEntryIdParamSchema = z.object({
 export const listJournalEntriesQuerySchema = z.object({
   page: z.coerce.number().int().positive().optional(),
   limit: z.coerce.number().int().positive().max(100).optional(),
-  journalId: z.string().cuid().optional(),
+  journalId: z.string().min(1).optional(),
 });

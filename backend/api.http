@@ -14,6 +14,17 @@ Content-Type: application/json
   "password": "Admin123!"
 }
 
+### Auth — Register (accountant)
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "New Accountant",
+  "email": "new.accountant@ufac.local",
+  "password": "Account123!",
+  "role": "ACCOUNTANT"
+}
+
 ### Auth — Me
 GET {{baseUrl}}/auth/me
 Authorization: Bearer {{token}}

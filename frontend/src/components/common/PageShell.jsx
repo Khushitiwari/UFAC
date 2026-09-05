@@ -1,10 +1,15 @@
-const PageShell = ({ title, children, actions }) => (
+const PageShell = ({ title, subtitle, children, actions, bare = false }) => (
   <>
     <div className="page-header">
-      <h2>{title}</h2>
+      <div>
+        <h2>{title}</h2>
+        {subtitle && <p className="page-subtitle">{subtitle}</p>}
+      </div>
       {actions}
     </div>
-    <div className="card">{children}</div>
+    <div className="page-body">
+      {bare ? children : <div className="card">{children}</div>}
+    </div>
   </>
 );
 

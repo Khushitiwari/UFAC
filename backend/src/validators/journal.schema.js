@@ -11,7 +11,7 @@ export const createJournalSchema = z.object({
 export const updateJournalSchema = createJournalSchema.partial();
 
 export const journalIdParamSchema = z.object({
-  id: z.string().cuid('Invalid journal id'),
+  id: z.string().min(1, 'Invalid journal id'),
 });
 
 export const listJournalsQuerySchema = z.object({

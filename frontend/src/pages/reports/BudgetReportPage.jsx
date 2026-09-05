@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { reportsApi } from '../../api/index.js';
 import PageShell from '../../components/common/PageShell.jsx';
 import Button from '../../components/common/Button.jsx';
-import LoadingSpinner from '../../components/common/LoadingSpinner.jsx';
+import TableSkeleton from '../../components/common/TableSkeleton.jsx';
 import { formatCurrency } from '../../utils/format.js';
 import { toDateInput } from '../../utils/formHelpers.js';
 
@@ -30,7 +30,10 @@ const BudgetReportPage = () => {
 
   useEffect(() => { fetchReport(); }, [fetchReport]);
 
-  const rows = useMemo(() => report?.items || report?.budgets || [], [report]);
+  const rows = useMemo(() => {
+    if (Array.isArray(report)) return report;
+    return report?.items || report?.budgets || [];
+  }, [report]);
   const totals = useMemo(() => ({
     planned: rows.reduce((s, r) => s + Number(r.plannedAmount || 0), 0),
     actual: rows.reduce((s, r) => s + Number(r.actualAmount || r.actual || 0), 0),
@@ -45,8 +48,10 @@ const BudgetReportPage = () => {
         <Button variant="secondary" onClick={fetchReport}>Refresh</Button>
       </div>
       {error && <div className="alert-error">{error}</div>}
-      {loading ? <LoadingSpinner /> : (
-        <div className="card">
+      {loading && !report ? (
+        <TableSkeleton columns={4} rows={6} />
+      ) : (
+        <div className={`report-table-card ${loading ? 'is-refreshing' : ''}`}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ borderBottom: '2px solid var(--color-border)' }}>

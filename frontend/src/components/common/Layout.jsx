@@ -1,29 +1,30 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 import Button from '../common/Button.jsx';
+import PageTransition from './PageTransition.jsx';
 
 const adminNavItems = [
-  { to: '/', label: 'Dashboard', end: true },
-  { to: '/contacts', label: 'Contacts' },
-  { to: '/products', label: 'Products' },
-  { to: '/accounts', label: 'Chart of Accounts' },
-  { to: '/journals', label: 'Journals' },
-  { to: '/journals/entries', label: 'Journal Entries' },
-  { to: '/journals/entry/new', label: 'Manual Entry' },
-  { to: '/purchase-orders', label: 'Purchase Orders' },
-  { to: '/vendor-bills', label: 'Vendor Bills' },
-  { to: '/sales-orders', label: 'Sales Orders' },
-  { to: '/customer-invoices', label: 'Customer Invoices' },
-  { to: '/payments', label: 'Payments' },
-  { to: '/analytic-accounts', label: 'Analytic Accounts' },
-  { to: '/budgets', label: 'Budget' },
-  { to: '/reports', label: 'Reports' },
+  { to: '/', label: 'Dashboard', icon: '◫', end: true },
+  { to: '/contacts', label: 'Contacts', icon: '◎' },
+  { to: '/products', label: 'Products', icon: '▣' },
+  { to: '/accounts', label: 'Chart of Accounts', icon: '☰' },
+  { to: '/journals', label: 'Journals', icon: '▤' },
+  { to: '/journals/entries', label: 'Journal Entries', icon: '▥' },
+  { to: '/journals/entry/new', label: 'Manual Entry', icon: '✎' },
+  { to: '/purchase-orders', label: 'Purchase Orders', icon: '↓' },
+  { to: '/vendor-bills', label: 'Vendor Bills', icon: '▧' },
+  { to: '/sales-orders', label: 'Sales Orders', icon: '↑' },
+  { to: '/customer-invoices', label: 'Customer Invoices', icon: '▨' },
+  { to: '/payments', label: 'Payments', icon: '$' },
+  { to: '/analytic-accounts', label: 'Analytic Accounts', icon: '◉' },
+  { to: '/budgets', label: 'Budget', icon: '◈' },
+  { to: '/reports', label: 'Reports', icon: '▦' },
 ];
 
 const contactNavItems = [
-  { to: '/vendor-bills', label: 'My Bills' },
-  { to: '/customer-invoices', label: 'My Invoices' },
-  { to: '/payments', label: 'Payments' },
+  { to: '/vendor-bills', label: 'My Bills', icon: '▧' },
+  { to: '/customer-invoices', label: 'My Invoices', icon: '▨' },
+  { to: '/payments', label: 'Payments', icon: '$' },
 ];
 
 const Layout = () => {
@@ -40,24 +41,38 @@ const Layout = () => {
   return (
     <div className="app-layout">
       <aside className="sidebar">
-        <h1>UFAC</h1>
+        <div className="sidebar-brand">
+          <div className="sidebar-logo">UF</div>
+          <div>
+            <h1>UFAC</h1>
+            <span>Accounting Suite</span>
+          </div>
+        </div>
         <nav>
           {navItems.map((item) => (
-            <NavLink key={item.to} to={item.to} end={item.end}>
+            <NavLink key={item.to} to={item.to} end={item.end} className="nav-link">
+              <span className="nav-icon" aria-hidden="true">{item.icon}</span>
               {item.label}
             </NavLink>
           ))}
         </nav>
-        <div style={{ padding: '1.25rem', marginTop: 'auto', borderTop: '1px solid rgba(255,255,255,0.15)' }}>
-          <div style={{ fontSize: '0.8rem', opacity: 0.7, marginBottom: '0.5rem' }}>{user?.name}</div>
-          <div style={{ fontSize: '0.75rem', opacity: 0.5, marginBottom: '0.75rem' }}>{user?.role}</div>
-          <Button variant="secondary" onClick={handleLogout} style={{ width: '100%', fontSize: '0.8rem' }}>
+        <div className="sidebar-footer">
+          <div className="sidebar-user">
+            <div className="sidebar-avatar">{user?.name?.charAt(0) ?? '?'}</div>
+            <div>
+              <div className="sidebar-user-name">{user?.name}</div>
+              <div className="sidebar-user-role">{user?.role}</div>
+            </div>
+          </div>
+          <Button variant="secondary" onClick={handleLogout} className="btn-block btn-sm">
             Sign Out
           </Button>
         </div>
       </aside>
       <main className="main-content">
-        <Outlet />
+        <PageTransition>
+          <Outlet />
+        </PageTransition>
       </main>
     </div>
   );

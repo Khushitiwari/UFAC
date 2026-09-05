@@ -60,7 +60,12 @@ const JournalEntryForm = ({ onSubmit, journals = [], accounts = [], submitLabel 
         setErrors(fieldErrors);
         return;
       }
-      await onSubmit(result.data);
+      setErrors({});
+      try {
+        await onSubmit(result.data);
+      } catch {
+        // Parent handles toast; keep form state for correction
+      }
     },
     [form, onSubmit],
   );

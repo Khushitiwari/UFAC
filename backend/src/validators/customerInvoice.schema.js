@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { billInvoiceStatusEnum } from './shared.schema.js';
 
 const customerInvoiceLineSchema = z.object({
-  productId: z.string().cuid(),
+  productId: z.string().min(1),
   quantity: z.coerce.number().positive(),
   unitPrice: z.coerce.number().nonnegative(),
   tax: z.coerce.number().nonnegative().default(0),

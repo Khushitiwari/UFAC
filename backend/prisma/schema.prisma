@@ -198,6 +198,8 @@ model JournalEntry {
   @@index([sourceId])
 }
 
+
+
 model JournalItem {
   id                String           @id @default(cuid())
   journalEntryId    String
@@ -216,6 +218,7 @@ model JournalItem {
   @@index([analyticAccountId])
 }
 
+
 model PurchaseOrder {
   id          String              @id @default(cuid())
   contactId   String
@@ -233,6 +236,7 @@ model PurchaseOrder {
   @@index([date])
 }
 
+
 model PurchaseOrderLine {
   id              String        @id @default(cuid())
   purchaseOrderId String
@@ -245,6 +249,7 @@ model PurchaseOrderLine {
   @@index([purchaseOrderId])
   @@index([productId])
 }
+
 
 model VendorBill {
   id              String            @id @default(cuid())
@@ -269,6 +274,7 @@ model VendorBill {
   @@index([dueDate])
   @@index([journalEntryId])
 }
+
 
 model SalesOrder {
   id               String           @id @default(cuid())

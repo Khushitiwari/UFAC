@@ -16,7 +16,7 @@ export const createProductSchema = z.object({
 export const updateProductSchema = createProductSchema.partial();
 
 export const productIdParamSchema = z.object({
-  id: z.string().cuid('Invalid product id'),
+  id: z.string().min(1, 'Invalid product id'),
 });
 
 export const listProductsQuerySchema = z.object({

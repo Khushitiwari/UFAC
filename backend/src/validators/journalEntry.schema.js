@@ -1,6 +1,5 @@
 import { z } from 'zod';
-
-export const journalEntryStatusEnum = z.enum(['DRAFT', 'POSTED', 'CANCELLED']);
+import { sourceTypeEnum } from './shared.schema.js';
 
 export const journalItemSchema = z.object({
   accountId: z.string().cuid(),
@@ -15,8 +14,8 @@ export const createJournalEntrySchema = z
     journalId: z.string().cuid(),
     date: z.coerce.date(),
     reference: z.string().max(100).optional().nullable(),
-    description: z.string().max(500).optional().nullable(),
-    status: journalEntryStatusEnum.optional(),
+    sourceType: sourceTypeEnum.optional().nullable(),
+    sourceId: z.string().optional().nullable(),
     items: z.array(journalItemSchema).min(2, 'At least two journal items required'),
   })
   .superRefine((data, ctx) => {
@@ -25,39 +24,19 @@ export const createJournalEntrySchema = z
 
     if (Math.abs(totalDebit - totalCredit) > 0.001) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: `Debits (${totalDebit}) must equal credits (${totalCredit})`,
         path: ['items'],
       });
     }
-
-    for (const item of data.items) {
-      if (item.debit > 0 && item.credit > 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'A line cannot have both debit and credit',
-          path: ['items'],
-        });
-      }
-      if (item.debit === 0 && item.credit === 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'Each line must have a debit or credit amount',
-          path: ['items'],
-        });
-      }
-    }
   });
 
-export const updateJournalEntrySchema = z.object({
-  journalId: z.string().cuid().optional(),
-  date: z.coerce.date().optional(),
-  reference: z.string().max(100).optional().nullable(),
-  description: z.string().max(500).optional().nullable(),
-  status: journalEntryStatusEnum.optional(),
-  items: z.array(journalItemSchema).min(2).optional(),
+export const journalEntryIdParamSchema = z.object({
+  id: z.string().cuid('Invalid journal entry id'),
 });
 
-export const journalEntryIdParamSchema = z.object({
-  id: z.string().cuid(),
+export const listJournalEntriesQuerySchema = z.object({
+  page: z.coerce.number().int().positive().optional(),
+  limit: z.coerce.number().int().positive().max(100).optional(),
+  journalId: z.string().cuid().optional(),
 });

@@ -4,6 +4,7 @@ import {
   getJournal,
   createJournal,
   updateJournal,
+  deleteJournal,
 } from '../controllers/journal.controller.js';
 import {
   listJournalEntries,
@@ -16,14 +17,18 @@ import {
   createJournalSchema,
   updateJournalSchema,
   journalIdParamSchema,
+  listJournalsQuerySchema,
 } from '../validators/journal.schema.js';
-import { createJournalEntrySchema } from '../validators/journalEntry.schema.js';
+import {
+  createJournalEntrySchema,
+  listJournalEntriesQuerySchema,
+} from '../validators/journalEntry.schema.js';
 
 const router = Router();
 
 router.use(authenticate);
 
-router.get('/entries', listJournalEntries);
+router.get('/entries', validate(listJournalEntriesQuerySchema, 'query'), listJournalEntries);
 router.post(
   '/entries',
   requireRole('ADMIN', 'ACCOUNTANT'),
@@ -31,7 +36,7 @@ router.post(
   createJournalEntry,
 );
 
-router.get('/', listJournals);
+router.get('/', validate(listJournalsQuerySchema, 'query'), listJournals);
 router.get('/:id', validate(journalIdParamSchema, 'params'), getJournal);
 router.post('/', requireRole('ADMIN', 'ACCOUNTANT'), validate(createJournalSchema), createJournal);
 router.put(
@@ -40,6 +45,12 @@ router.put(
   validate(journalIdParamSchema, 'params'),
   validate(updateJournalSchema),
   updateJournal,
+);
+router.delete(
+  '/:id',
+  requireRole('ADMIN'),
+  validate(journalIdParamSchema, 'params'),
+  deleteJournal,
 );
 
 export default router;

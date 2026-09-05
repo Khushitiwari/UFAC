@@ -1,0 +1,102 @@
+import { useCallback, useMemo, useState } from 'react';
+import { createPurchaseOrderSchema } from '../../validators/purchaseOrder.schema.js';
+import { emptyLine, linesTotal, parseFormDate, toDateInput } from '../../utils/formHelpers.js';
+import { formatCurrency } from '../../utils/format.js';
+import Button from '../common/Button.jsx';
+
+const PurchaseOrderForm = ({ initialValues, onSubmit, onCancel, contacts = [], products = [], submitLabel = 'Save' }) => {
+  const [form, setForm] = useState(() => ({
+    contactId: initialValues?.contactId ?? '',
+    date: toDateInput(initialValues?.date) || toDateInput(new Date()),
+    status: initialValues?.status ?? 'DRAFT',
+    notes: initialValues?.notes ?? '',
+    lines: initialValues?.lines?.length ? initialValues.lines : [emptyLine()],
+  }));
+  const [errors, setErrors] = useState({});
+
+  const total = useMemo(() => linesTotal(form.lines), [form.lines]);
+
+  const handleChange = useCallback((e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  }, []);
+
+  const updateLine = useCallback((index, field, value) => {
+    setForm((prev) => {
+      const lines = [...prev.lines];
+      lines[index] = { ...lines[index], [field]: value };
+      return { ...prev, lines };
+    });
+  }, []);
+
+  const addLine = () => setForm((prev) => ({ ...prev, lines: [...prev.lines, emptyLine()] }));
+  const removeLine = (index) =>
+    setForm((prev) => ({ ...prev, lines: prev.lines.filter((_, i) => i !== index) }));
+
+  const handleSubmit = useCallback(
+    async (e) => {
+      e.preventDefault();
+      const payload = { ...form, date: parseFormDate(form.date), lines: form.lines.map((l) => ({ ...l, quantity: Number(l.quantity), unitPrice: Number(l.unitPrice) })) };
+      const result = createPurchaseOrderSchema.safeParse(payload);
+      if (!result.success) {
+        const fieldErrors = {};
+        result.error.errors.forEach((err) => {
+          fieldErrors[err.path.join('.') || 'form'] = err.message;
+        });
+        setErrors(fieldErrors);
+        return;
+      }
+      await onSubmit(result.data);
+    },
+    [form, onSubmit],
+  );
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <div className="form-group">
+        <label htmlFor="contactId">Vendor *</label>
+        <select id="contactId" name="contactId" value={form.contactId} onChange={handleChange}>
+          <option value="">Select vendor...</option>
+          {contacts.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+        </select>
+        {errors.contactId && <div className="form-error">{errors.contactId}</div>}
+      </div>
+      <div className="form-group">
+        <label htmlFor="date">Date *</label>
+        <input id="date" name="date" type="date" value={form.date} onChange={handleChange} />
+      </div>
+      <div className="form-group">
+        <label htmlFor="status">Status</label>
+        <select id="status" name="status" value={form.status} onChange={handleChange}>
+          <option value="DRAFT">Draft</option>
+          <option value="CONFIRMED">Confirmed</option>
+        </select>
+      </div>
+      <div className="form-group">
+        <label htmlFor="notes">Notes</label>
+        <textarea id="notes" name="notes" rows={2} value={form.notes || ''} onChange={handleChange} />
+      </div>
+      <h4 style={{ margin: '1rem 0 0.5rem' }}>Line Items</h4>
+      {errors.lines && <div className="form-error">{errors.lines}</div>}
+      {form.lines.map((line, idx) => (
+        <div key={idx} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto', gap: '0.5rem', marginBottom: '0.5rem' }}>
+          <select value={line.productId} onChange={(e) => updateLine(idx, 'productId', e.target.value)}>
+            <option value="">Product...</option>
+            {products.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+          <input type="number" min="1" step="1" placeholder="Qty" value={line.quantity} onChange={(e) => updateLine(idx, 'quantity', e.target.value)} />
+          <input type="number" min="0" step="0.01" placeholder="Unit price" value={line.unitPrice} onChange={(e) => updateLine(idx, 'unitPrice', e.target.value)} />
+          <Button type="button" variant="secondary" onClick={() => removeLine(idx)} disabled={form.lines.length <= 1}>Remove</Button>
+        </div>
+      ))}
+      <Button type="button" variant="secondary" onClick={addLine} style={{ marginBottom: '1rem' }}>+ Add Line</Button>
+      <div style={{ fontWeight: 600, marginBottom: '1rem' }}>Total: {formatCurrency(total)}</div>
+      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+        {onCancel && <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>}
+        <Button type="submit">{submitLabel}</Button>
+      </div>
+    </form>
+  );
+};
+
+export default PurchaseOrderForm;

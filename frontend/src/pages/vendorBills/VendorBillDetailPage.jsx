@@ -7,7 +7,7 @@ import Table from '../../components/common/Table.jsx';
 import Modal from '../../components/common/Modal.jsx';
 import PaymentForm from '../../components/forms/PaymentForm.jsx';
 import VendorBillForm from '../../components/forms/VendorBillForm.jsx';
-import LoadingSpinner from '../../components/common/LoadingSpinner.jsx';
+import AsyncPageGate from '../../components/common/AsyncPageGate.jsx';
 import { useVendorBill } from '../../hooks/useVendorBills.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { canWrite, canDelete } from '../../utils/permissions.js';
@@ -83,14 +83,14 @@ const VendorBillDetailPage = () => {
     navigate('/vendor-bills');
   }, [id, navigate]);
 
-  if (loading) return <LoadingSpinner />;
-  if (error) return <div className="alert-error">{error}</div>;
-  if (!vendorBill) return <div className="alert-error">Not found</div>;
-
-  const hasPayments = (vendorBill.payments || []).length > 0;
+  const hasPayments = (vendorBill?.payments || []).length > 0;
   const canModify = write && !hasPayments;
 
   return (
+    <AsyncPageGate loading={loading} hasContent={!loading} label="Loading vendor bill...">
+      {error && <div className="alert-error">{error}</div>}
+      {!vendorBill && !loading && <div className="alert-error">Not found</div>}
+      {vendorBill && (
     <PageShell
       title={`Bill ${vendorBill.number || vendorBill.id?.slice(0, 8)}`}
       actions={
@@ -134,6 +134,8 @@ const VendorBillDetailPage = () => {
         />
       </Modal>
     </PageShell>
+      )}
+    </AsyncPageGate>
   );
 };
 

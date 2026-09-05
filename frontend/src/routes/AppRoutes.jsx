@@ -49,6 +49,10 @@ const BalanceSheetPage = lazy(() => import('../pages/reports/BalanceSheetPage.js
 const ProfitAndLossPage = lazy(() => import('../pages/reports/ProfitAndLossPage.jsx'));
 const BudgetReportPage = lazy(() => import('../pages/reports/BudgetReportPage.jsx'));
 
+const AuthSuspense = ({ children }) => (
+  <Suspense fallback={<PageSkeleton />}>{children}</Suspense>
+);
+
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, initializing } = useAuth();
   if (initializing) return <PageSkeleton />;
@@ -75,51 +79,49 @@ const ContactHomeRedirect = () => {
 };
 
 const AppRoutes = () => (
-  <Suspense fallback={<PageSkeleton />}>
-    <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/signup" element={<SignupPage />} />
-      <Route
-        element={
-          <ProtectedRoute>
-            <Layout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<ContactHomeRedirect />} />
-        <Route path="vendor-bills" element={<VendorBillsListPage />} />
-        <Route path="vendor-bills/:id" element={<VendorBillDetailPage />} />
-        <Route path="customer-invoices" element={<CustomerInvoicesListPage />} />
-        <Route path="customer-invoices/:id" element={<CustomerInvoiceDetailPage />} />
-        <Route path="payments" element={<PaymentsListPage />} />
-        <Route path="payments/:id" element={<PaymentDetailPage />} />
+  <Routes>
+    <Route path="/login" element={<AuthSuspense><LoginPage /></AuthSuspense>} />
+    <Route path="/signup" element={<AuthSuspense><SignupPage /></AuthSuspense>} />
+    <Route
+      element={
+        <ProtectedRoute>
+          <Layout />
+        </ProtectedRoute>
+      }
+    >
+      <Route index element={<ContactHomeRedirect />} />
+      <Route path="vendor-bills" element={<VendorBillsListPage />} />
+      <Route path="vendor-bills/:id" element={<VendorBillDetailPage />} />
+      <Route path="customer-invoices" element={<CustomerInvoicesListPage />} />
+      <Route path="customer-invoices/:id" element={<CustomerInvoiceDetailPage />} />
+      <Route path="payments" element={<PaymentsListPage />} />
+      <Route path="payments/:id" element={<PaymentDetailPage />} />
 
-        <Route path="contacts" element={<StaffRoute><ContactsListPage /></StaffRoute>} />
-        <Route path="contacts/:id" element={<StaffRoute><ContactDetailPage /></StaffRoute>} />
-        <Route path="products" element={<StaffRoute><ProductsListPage /></StaffRoute>} />
-        <Route path="products/:id" element={<StaffRoute><ProductDetailPage /></StaffRoute>} />
-        <Route path="accounts" element={<StaffRoute><AccountsListPage /></StaffRoute>} />
-        <Route path="accounts/:id" element={<StaffRoute><AccountDetailPage /></StaffRoute>} />
-        <Route path="journals" element={<StaffRoute><JournalsListPage /></StaffRoute>} />
-        <Route path="journals/entries" element={<StaffRoute><JournalEntriesListPage /></StaffRoute>} />
-        <Route path="journals/entry/new" element={<StaffRoute><JournalEntryPage /></StaffRoute>} />
-        <Route path="journals/:id" element={<StaffRoute><JournalDetailPage /></StaffRoute>} />
-        <Route path="purchase-orders" element={<StaffRoute><PurchaseOrdersListPage /></StaffRoute>} />
-        <Route path="purchase-orders/:id" element={<StaffRoute><PurchaseOrderDetailPage /></StaffRoute>} />
-        <Route path="sales-orders" element={<StaffRoute><SalesOrdersListPage /></StaffRoute>} />
-        <Route path="sales-orders/:id" element={<StaffRoute><SalesOrderDetailPage /></StaffRoute>} />
-        <Route path="analytic-accounts" element={<StaffRoute><AnalyticAccountsListPage /></StaffRoute>} />
-        <Route path="analytic-accounts/:id" element={<StaffRoute><AnalyticAccountDetailPage /></StaffRoute>} />
-        <Route path="budgets" element={<StaffRoute><BudgetsListPage /></StaffRoute>} />
-        <Route path="budgets/:id" element={<StaffRoute><BudgetDetailPage /></StaffRoute>} />
-        <Route path="reports" element={<ReportsRoute><ReportsIndexPage /></ReportsRoute>} />
-        <Route path="reports/balance-sheet" element={<ReportsRoute><BalanceSheetPage /></ReportsRoute>} />
-        <Route path="reports/profit-loss" element={<ReportsRoute><ProfitAndLossPage /></ReportsRoute>} />
-        <Route path="reports/budget" element={<ReportsRoute><BudgetReportPage /></ReportsRoute>} />
-      </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
-  </Suspense>
+      <Route path="contacts" element={<StaffRoute><ContactsListPage /></StaffRoute>} />
+      <Route path="contacts/:id" element={<StaffRoute><ContactDetailPage /></StaffRoute>} />
+      <Route path="products" element={<StaffRoute><ProductsListPage /></StaffRoute>} />
+      <Route path="products/:id" element={<StaffRoute><ProductDetailPage /></StaffRoute>} />
+      <Route path="accounts" element={<StaffRoute><AccountsListPage /></StaffRoute>} />
+      <Route path="accounts/:id" element={<StaffRoute><AccountDetailPage /></StaffRoute>} />
+      <Route path="journals" element={<StaffRoute><JournalsListPage /></StaffRoute>} />
+      <Route path="journals/entries" element={<StaffRoute><JournalEntriesListPage /></StaffRoute>} />
+      <Route path="journals/entry/new" element={<StaffRoute><JournalEntryPage /></StaffRoute>} />
+      <Route path="journals/:id" element={<StaffRoute><JournalDetailPage /></StaffRoute>} />
+      <Route path="purchase-orders" element={<StaffRoute><PurchaseOrdersListPage /></StaffRoute>} />
+      <Route path="purchase-orders/:id" element={<StaffRoute><PurchaseOrderDetailPage /></StaffRoute>} />
+      <Route path="sales-orders" element={<StaffRoute><SalesOrdersListPage /></StaffRoute>} />
+      <Route path="sales-orders/:id" element={<StaffRoute><SalesOrderDetailPage /></StaffRoute>} />
+      <Route path="analytic-accounts" element={<StaffRoute><AnalyticAccountsListPage /></StaffRoute>} />
+      <Route path="analytic-accounts/:id" element={<StaffRoute><AnalyticAccountDetailPage /></StaffRoute>} />
+      <Route path="budgets" element={<StaffRoute><BudgetsListPage /></StaffRoute>} />
+      <Route path="budgets/:id" element={<StaffRoute><BudgetDetailPage /></StaffRoute>} />
+      <Route path="reports" element={<ReportsRoute><ReportsIndexPage /></ReportsRoute>} />
+      <Route path="reports/balance-sheet" element={<ReportsRoute><BalanceSheetPage /></ReportsRoute>} />
+      <Route path="reports/profit-loss" element={<ReportsRoute><ProfitAndLossPage /></ReportsRoute>} />
+      <Route path="reports/budget" element={<ReportsRoute><BudgetReportPage /></ReportsRoute>} />
+    </Route>
+    <Route path="*" element={<Navigate to="/" replace />} />
+  </Routes>
 );
 
 export default AppRoutes;

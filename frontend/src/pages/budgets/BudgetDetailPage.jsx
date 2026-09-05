@@ -5,7 +5,7 @@ import PageShell from '../../components/common/PageShell.jsx';
 import Button from '../../components/common/Button.jsx';
 import Modal from '../../components/common/Modal.jsx';
 import BudgetForm from '../../components/forms/BudgetForm.jsx';
-import PageSkeleton from '../../components/common/PageSkeleton.jsx';
+import { AsyncPageSkeletonGate } from '../../components/common/AsyncPageGate.jsx';
 import { useBudget } from '../../hooks/useBudgets.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { canWrite, canDelete } from '../../utils/permissions.js';
@@ -54,11 +54,11 @@ const BudgetDetailPage = () => {
     }
   }, [id, navigate, showToast]);
 
-  if (loading && !budget) return <PageSkeleton />;
-  if (error && !budget) return <div className="alert-error">{error}</div>;
-  if (!budget) return <div className="alert-error">Budget not found</div>;
-
   return (
+    <AsyncPageSkeletonGate loading={loading} hasContent={!!budget}>
+      {error && !budget && <div className="alert-error">{error}</div>}
+      {!budget && !loading && <div className="alert-error">Budget not found</div>}
+      {budget && (
     <>
       <PageShell
         title={budget.name}
@@ -107,6 +107,8 @@ const BudgetDetailPage = () => {
         />
       </Modal>
     </>
+      )}
+    </AsyncPageSkeletonGate>
   );
 };
 

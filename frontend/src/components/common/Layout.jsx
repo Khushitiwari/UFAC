@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 import Button from '../common/Button.jsx';
 import PageTransition from './PageTransition.jsx';
@@ -70,9 +70,7 @@ const Layout = () => {
         </div>
       </aside>
       <main className="main-content">
-        <PageTransition>
-          <Outlet />
-        </PageTransition>
+        <PageTransition />
       </main>
     </div>
   );

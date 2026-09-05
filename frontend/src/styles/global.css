@@ -477,11 +477,17 @@ a:hover {
   animation: report-spin 0.7s linear infinite;
 }
 
-.report-load-content.is-refreshing {
+.report-load-content.is-refreshing,
+.page-load-content.is-refreshing {
   opacity: 0.62;
   pointer-events: none;
   filter: blur(0.4px);
   transition: opacity 0.28s ease, filter 0.28s ease;
+}
+
+.page-load-skeleton,
+.report-load-skeleton {
+  width: 100%;
 }
 
 .report-section-card {

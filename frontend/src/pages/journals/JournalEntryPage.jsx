@@ -4,7 +4,7 @@ import { journalEntriesApi, journalsApi, accountsApi } from '../../api/index.js'
 import PageShell from '../../components/common/PageShell.jsx';
 import Button from '../../components/common/Button.jsx';
 import JournalEntryForm from '../../components/forms/JournalEntryForm.jsx';
-import LoadingSpinner from '../../components/common/LoadingSpinner.jsx';
+import AsyncPageGate from '../../components/common/AsyncPageGate.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 
 const JournalEntryPage = () => {
@@ -54,9 +54,9 @@ const JournalEntryPage = () => {
     [navigate, showToast],
   );
 
-  if (loading) return <LoadingSpinner label="Loading..." />;
-
   return (
+    <AsyncPageGate loading={loading} hasContent={!loading} label="Loading...">
+      {!loading && (
     <PageShell
       title="Manual Journal Entry"
       actions={<Link to="/journals"><Button variant="secondary">Back</Button></Link>}
@@ -65,6 +65,8 @@ const JournalEntryPage = () => {
         <JournalEntryForm journals={journals} accounts={accounts} onSubmit={handleSubmit} />
       </div>
     </PageShell>
+      )}
+    </AsyncPageGate>
   );
 };
 

@@ -5,7 +5,7 @@ import PageShell from '../../components/common/PageShell.jsx';
 import Button from '../../components/common/Button.jsx';
 import Modal from '../../components/common/Modal.jsx';
 import AnalyticAccountForm from '../../components/forms/AnalyticAccountForm.jsx';
-import LoadingSpinner from '../../components/common/LoadingSpinner.jsx';
+import AsyncPageGate from '../../components/common/AsyncPageGate.jsx';
 import { useAnalyticAccount } from '../../hooks/useAnalyticAccounts.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { canWrite, canDelete } from '../../utils/permissions.js';
@@ -33,11 +33,11 @@ const AnalyticAccountDetailPage = () => {
     navigate('/analytic-accounts');
   }, [id, navigate]);
 
-  if (loading) return <LoadingSpinner />;
-  if (error) return <div className="alert-error">{error}</div>;
-  if (!analyticAccount) return <div className="alert-error">Not found</div>;
-
   return (
+    <AsyncPageGate loading={loading} hasContent={!loading} label="Loading analytic account...">
+      {error && <div className="alert-error">{error}</div>}
+      {!analyticAccount && !loading && <div className="alert-error">Not found</div>}
+      {analyticAccount && (
     <PageShell title={analyticAccount.name} actions={<>{write && <Button variant="secondary" onClick={() => setEditOpen(true)}>Edit</Button>}{del && <Button variant="secondary" onClick={handleDelete}>Delete</Button>}<Link to="/analytic-accounts"><Button variant="secondary">Back</Button></Link></>}>
       <div className="card">
         <p><strong>Type:</strong> {analyticAccount.type}</p>
@@ -47,6 +47,8 @@ const AnalyticAccountDetailPage = () => {
         <AnalyticAccountForm initialValues={analyticAccount} onSubmit={handleUpdate} onCancel={() => setEditOpen(false)} submitLabel="Update" />
       </Modal>
     </PageShell>
+      )}
+    </AsyncPageGate>
   );
 };
 

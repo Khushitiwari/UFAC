@@ -6,7 +6,7 @@ import Button from '../../components/common/Button.jsx';
 import Table from '../../components/common/Table.jsx';
 import Modal from '../../components/common/Modal.jsx';
 import SalesOrderForm from '../../components/forms/SalesOrderForm.jsx';
-import LoadingSpinner from '../../components/common/LoadingSpinner.jsx';
+import AsyncPageGate from '../../components/common/AsyncPageGate.jsx';
 import { useSalesOrder } from '../../hooks/useSalesOrders.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { canWrite, canDelete } from '../../utils/permissions.js';
@@ -75,14 +75,14 @@ const SalesOrderDetailPage = () => {
     navigate('/sales-orders');
   }, [id, navigate]);
 
-  if (loading) return <LoadingSpinner />;
-  if (error) return <div className="alert-error">{error}</div>;
-  if (!salesOrder) return <div className="alert-error">Not found</div>;
-
-  const canGenerate = write && salesOrder.status === 'CONFIRMED';
-  const canModify = write && salesOrder.status !== 'INVOICED';
+  const canGenerate = write && salesOrder?.status === 'CONFIRMED';
+  const canModify = write && salesOrder?.status !== 'INVOICED';
 
   return (
+    <AsyncPageGate loading={loading} hasContent={!loading} label="Loading sales order...">
+      {error && <div className="alert-error">{error}</div>}
+      {!salesOrder && !loading && <div className="alert-error">Not found</div>}
+      {salesOrder && (
     <PageShell
       title={`SO ${salesOrder.number || salesOrder.id?.slice(0, 8)}`}
       actions={
@@ -116,6 +116,8 @@ const SalesOrderDetailPage = () => {
         />
       </Modal>
     </PageShell>
+      )}
+    </AsyncPageGate>
   );
 };
 

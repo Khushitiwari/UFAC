@@ -7,7 +7,7 @@ import Table from '../../components/common/Table.jsx';
 import Modal from '../../components/common/Modal.jsx';
 import PaymentForm from '../../components/forms/PaymentForm.jsx';
 import CustomerInvoiceForm from '../../components/forms/CustomerInvoiceForm.jsx';
-import LoadingSpinner from '../../components/common/LoadingSpinner.jsx';
+import AsyncPageGate from '../../components/common/AsyncPageGate.jsx';
 import { useCustomerInvoice } from '../../hooks/useCustomerInvoices.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { canWrite, canDelete } from '../../utils/permissions.js';
@@ -87,14 +87,14 @@ const CustomerInvoiceDetailPage = () => {
     navigate('/customer-invoices');
   }, [id, navigate]);
 
-  if (loading) return <LoadingSpinner />;
-  if (error) return <div className="alert-error">{error}</div>;
-  if (!customerInvoice) return <div className="alert-error">Not found</div>;
-
-  const hasPayments = (customerInvoice.payments || []).length > 0;
+  const hasPayments = (customerInvoice?.payments || []).length > 0;
   const canModify = write && !hasPayments;
 
   return (
+    <AsyncPageGate loading={loading} hasContent={!loading} label="Loading customer invoice...">
+      {error && <div className="alert-error">{error}</div>}
+      {!customerInvoice && !loading && <div className="alert-error">Not found</div>}
+      {customerInvoice && (
     <PageShell
       title={`Invoice ${customerInvoice.number || customerInvoice.id?.slice(0, 8)}`}
       actions={
@@ -136,6 +136,8 @@ const CustomerInvoiceDetailPage = () => {
         />
       </Modal>
     </PageShell>
+      )}
+    </AsyncPageGate>
   );
 };
 

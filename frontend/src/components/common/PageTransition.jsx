@@ -1,22 +1,12 @@
+import { Suspense } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useOutlet } from 'react-router-dom';
+import PageSkeleton from './PageSkeleton.jsx';
+import { pageVariants } from '../../utils/motion.js';
 
-const pageVariants = {
-  initial: { opacity: 0, y: 10 },
-  animate: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.32, ease: [0.22, 1, 0.36, 1] },
-  },
-  exit: {
-    opacity: 0,
-    y: -8,
-    transition: { duration: 0.2, ease: [0.22, 1, 0.36, 1] },
-  },
-};
-
-const PageTransition = ({ children }) => {
+const PageTransition = () => {
   const location = useLocation();
+  const outlet = useOutlet();
 
   return (
     <AnimatePresence mode="wait">
@@ -28,7 +18,9 @@ const PageTransition = ({ children }) => {
         animate="animate"
         exit="exit"
       >
-        {children}
+        <Suspense fallback={<PageSkeleton />}>
+          {outlet}
+        </Suspense>
       </motion.div>
     </AnimatePresence>
   );

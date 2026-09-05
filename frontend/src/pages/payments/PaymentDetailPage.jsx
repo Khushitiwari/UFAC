@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { paymentsApi } from '../../api/index.js';
 import PageShell from '../../components/common/PageShell.jsx';
 import Button from '../../components/common/Button.jsx';
-import LoadingSpinner from '../../components/common/LoadingSpinner.jsx';
+import AsyncPageGate from '../../components/common/AsyncPageGate.jsx';
 import { usePayment } from '../../hooks/usePayments.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { canWrite } from '../../utils/permissions.js';
@@ -24,11 +24,11 @@ const PaymentDetailPage = () => {
     navigate('/payments');
   }, [id, navigate]);
 
-  if (loading) return <LoadingSpinner />;
-  if (error) return <div className="alert-error">{error}</div>;
-  if (!payment) return <div className="alert-error">Not found</div>;
-
   return (
+    <AsyncPageGate loading={loading} hasContent={!loading} label="Loading payment...">
+      {error && <div className="alert-error">{error}</div>}
+      {!payment && !loading && <div className="alert-error">Not found</div>}
+      {payment && (
     <PageShell
       title="Payment Detail"
       actions={
@@ -58,6 +58,8 @@ const PaymentDetailPage = () => {
         )}
       </div>
     </PageShell>
+      )}
+    </AsyncPageGate>
   );
 };
 

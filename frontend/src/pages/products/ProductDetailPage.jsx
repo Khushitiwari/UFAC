@@ -5,7 +5,7 @@ import PageShell from '../../components/common/PageShell.jsx';
 import Button from '../../components/common/Button.jsx';
 import Modal from '../../components/common/Modal.jsx';
 import ProductForm from '../../components/forms/ProductForm.jsx';
-import LoadingSpinner from '../../components/common/LoadingSpinner.jsx';
+import AsyncPageGate from '../../components/common/AsyncPageGate.jsx';
 import { useProduct } from '../../hooks/useProducts.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { canWrite, canDelete } from '../../utils/permissions.js';
@@ -34,11 +34,11 @@ const ProductDetailPage = () => {
     navigate('/products');
   }, [id, navigate]);
 
-  if (loading) return <LoadingSpinner />;
-  if (error) return <div className="alert-error">{error}</div>;
-  if (!product) return <div className="alert-error">Not found</div>;
-
   return (
+    <AsyncPageGate loading={loading} hasContent={!loading} label="Loading product...">
+      {error && <div className="alert-error">{error}</div>}
+      {!product && !loading && <div className="alert-error">Not found</div>}
+      {product && (
     <PageShell title={product.name} actions={<>{write && <Button variant="secondary" onClick={() => setEditOpen(true)}>Edit</Button>}{del && <Button variant="secondary" onClick={handleDelete}>Delete</Button>}<Link to="/products"><Button variant="secondary">Back</Button></Link></>}>
       <div className="card">
         <p><strong>Type:</strong> {product.type}</p>
@@ -51,6 +51,8 @@ const ProductDetailPage = () => {
         <ProductForm initialValues={product} onSubmit={handleUpdate} onCancel={() => setEditOpen(false)} submitLabel="Update" />
       </Modal>
     </PageShell>
+      )}
+    </AsyncPageGate>
   );
 };
 

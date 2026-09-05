@@ -5,7 +5,7 @@ import PageShell from '../../components/common/PageShell.jsx';
 import Button from '../../components/common/Button.jsx';
 import Modal from '../../components/common/Modal.jsx';
 import ContactForm from '../../components/forms/ContactForm.jsx';
-import LoadingSpinner from '../../components/common/LoadingSpinner.jsx';
+import AsyncPageGate from '../../components/common/AsyncPageGate.jsx';
 import { useContact } from '../../hooks/useContacts.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { canWrite, canDelete } from '../../utils/permissions.js';
@@ -39,11 +39,11 @@ const ContactDetailPage = () => {
     navigate('/contacts');
   }, [id, navigate]);
 
-  if (loading) return <LoadingSpinner label="Loading contact..." />;
-  if (error) return <div className="alert-error">{error}</div>;
-  if (!contact) return <div className="alert-error">Contact not found</div>;
-
   return (
+    <AsyncPageGate loading={loading} hasContent={!loading} label="Loading contact...">
+      {error && <div className="alert-error">{error}</div>}
+      {!contact && !loading && <div className="alert-error">Contact not found</div>}
+      {contact && (
     <PageShell
       title={contact.name}
       actions={
@@ -67,6 +67,8 @@ const ContactDetailPage = () => {
         <ContactForm initialValues={contact} onSubmit={handleUpdate} onCancel={() => setEditOpen(false)} submitLabel="Update" />
       </Modal>
     </PageShell>
+      )}
+    </AsyncPageGate>
   );
 };
 

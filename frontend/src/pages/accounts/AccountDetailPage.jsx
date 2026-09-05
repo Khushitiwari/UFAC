@@ -5,7 +5,7 @@ import PageShell from '../../components/common/PageShell.jsx';
 import Button from '../../components/common/Button.jsx';
 import Modal from '../../components/common/Modal.jsx';
 import AccountForm from '../../components/forms/AccountForm.jsx';
-import LoadingSpinner from '../../components/common/LoadingSpinner.jsx';
+import AsyncPageGate from '../../components/common/AsyncPageGate.jsx';
 import { useAccount } from '../../hooks/useAccounts.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { canWrite, canDelete } from '../../utils/permissions.js';
@@ -33,11 +33,11 @@ const AccountDetailPage = () => {
     navigate('/accounts');
   }, [id, navigate]);
 
-  if (loading) return <LoadingSpinner />;
-  if (error) return <div className="alert-error">{error}</div>;
-  if (!account) return <div className="alert-error">Not found</div>;
-
   return (
+    <AsyncPageGate loading={loading} hasContent={!loading}>
+      {error && <div className="alert-error">{error}</div>}
+      {!account && !loading && <div className="alert-error">Not found</div>}
+      {account && (
     <PageShell title={account.name} actions={<>{write && <Button variant="secondary" onClick={() => setEditOpen(true)}>Edit</Button>}{del && <Button variant="secondary" onClick={handleDelete}>Delete</Button>}<Link to="/accounts"><Button variant="secondary">Back</Button></Link></>}>
       <div className="card">
         <p><strong>Type:</strong> {account.type}</p>
@@ -47,6 +47,8 @@ const AccountDetailPage = () => {
         <AccountForm initialValues={account} onSubmit={handleUpdate} onCancel={() => setEditOpen(false)} submitLabel="Update" />
       </Modal>
     </PageShell>
+      )}
+    </AsyncPageGate>
   );
 };
 

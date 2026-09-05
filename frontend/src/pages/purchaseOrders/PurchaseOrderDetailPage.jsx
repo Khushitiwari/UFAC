@@ -6,7 +6,7 @@ import Button from '../../components/common/Button.jsx';
 import Table from '../../components/common/Table.jsx';
 import Modal from '../../components/common/Modal.jsx';
 import PurchaseOrderForm from '../../components/forms/PurchaseOrderForm.jsx';
-import LoadingSpinner from '../../components/common/LoadingSpinner.jsx';
+import AsyncPageGate from '../../components/common/AsyncPageGate.jsx';
 import { usePurchaseOrder } from '../../hooks/usePurchaseOrders.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { canWrite, canDelete } from '../../utils/permissions.js';
@@ -75,14 +75,14 @@ const PurchaseOrderDetailPage = () => {
     navigate('/purchase-orders');
   }, [id, navigate]);
 
-  if (loading) return <LoadingSpinner />;
-  if (error) return <div className="alert-error">{error}</div>;
-  if (!purchaseOrder) return <div className="alert-error">Not found</div>;
-
-  const canConvert = write && purchaseOrder.status === 'CONFIRMED';
-  const canModify = write && purchaseOrder.status !== 'BILLED';
+  const canConvert = write && purchaseOrder?.status === 'CONFIRMED';
+  const canModify = write && purchaseOrder?.status !== 'BILLED';
 
   return (
+    <AsyncPageGate loading={loading} hasContent={!loading} label="Loading purchase order...">
+      {error && <div className="alert-error">{error}</div>}
+      {!purchaseOrder && !loading && <div className="alert-error">Not found</div>}
+      {purchaseOrder && (
     <PageShell
       title={`PO ${purchaseOrder.number || purchaseOrder.id?.slice(0, 8)}`}
       actions={
@@ -120,6 +120,8 @@ const PurchaseOrderDetailPage = () => {
         />
       </Modal>
     </PageShell>
+      )}
+    </AsyncPageGate>
   );
 };
 

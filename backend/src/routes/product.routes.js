@@ -13,15 +13,21 @@ import {
   createProductSchema,
   updateProductSchema,
   productIdParamSchema,
+  listProductsQuerySchema,
 } from '../validators/product.schema.js';
 
 const router = Router();
 
 router.use(authenticate);
 
-router.get('/', listProducts);
+router.get('/', validate(listProductsQuerySchema, 'query'), listProducts);
 router.get('/:id', validate(productIdParamSchema, 'params'), getProduct);
-router.post('/', requireRole('ADMIN', 'ACCOUNTANT'), validate(createProductSchema), createProduct);
+router.post(
+  '/',
+  requireRole('ADMIN', 'ACCOUNTANT'),
+  validate(createProductSchema),
+  createProduct,
+);
 router.put(
   '/:id',
   requireRole('ADMIN', 'ACCOUNTANT'),

@@ -490,6 +490,12 @@ Content-Type: application/json
 DELETE {{baseUrl}}/budgets/{{budgetId}}
 Authorization: Bearer {{token}}
 
+# ─── Dashboard ───────────────────────────────────────────────
+
+### Dashboard summary
+GET {{baseUrl}}/dashboard/summary
+Authorization: Bearer {{token}}
+
 # ─── Reports ──────────────────────────────────────────────────
 
 ### Balance sheet

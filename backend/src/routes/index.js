@@ -12,6 +12,7 @@ import paymentRoutes from './payment.routes.js';
 import analyticAccountRoutes from './analyticAccount.routes.js';
 import budgetRoutes from './budget.routes.js';
 import reportRoutes from './report.routes.js';
+import dashboardRoutes from './dashboard.routes.js';
 import { authRateLimiter } from '../middlewares/rateLimiter.js';
 
 const router = Router();
@@ -33,5 +34,6 @@ router.use('/payments', paymentRoutes);
 router.use('/analytic-accounts', analyticAccountRoutes);
 router.use('/budgets', budgetRoutes);
 router.use('/reports', reportRoutes);
+router.use('/dashboard', dashboardRoutes);
 
 export default router;

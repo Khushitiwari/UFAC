@@ -24,3 +24,13 @@ if (!parsed.success) {
 export const env = parsed.data;
 
 export const corsOrigins = env.CORS_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean);
+
+const LOCAL_DEV_ORIGIN = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/;
+
+/** @param {string | undefined} origin */
+export const isOriginAllowed = (origin) => {
+  if (!origin) return true;
+  if (corsOrigins.includes(origin)) return true;
+  if (env.NODE_ENV === 'development' && LOCAL_DEV_ORIGIN.test(origin)) return true;
+  return false;
+};

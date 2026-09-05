@@ -1,7 +1,7 @@
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
-import { corsOrigins, env } from './config/env.js';
+import { isOriginAllowed } from './config/env.js';
 import { globalRateLimiter } from './middlewares/rateLimiter.js';
 import { requestLogger } from './middlewares/requestLogger.js';
 import { errorHandler } from './middlewares/errorHandler.js';
@@ -11,17 +11,20 @@ const app = express();
 
 app.set('etag', false);
 
+
 app.use(helmet());
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || corsOrigins.includes(origin)) {
+      if (isOriginAllowed(origin)) {
         callback(null, true);
       } else {
-        callback(new Error(`Origin ${origin} not allowed by CORS`));
+        callback(null, false);
       }
     },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   }),
 );
 app.use(express.json({ limit: '10kb' }));

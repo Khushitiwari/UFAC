@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { showToast } from '../context/ToastContext.jsx';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 
@@ -24,6 +25,9 @@ axiosClient.interceptors.response.use(
       if (window.location.pathname !== '/login') {
         window.location.href = '/login';
       }
+    } else if (!error.config?.skipErrorToast) {
+      const message = error.response?.data?.error || error.message || 'Request failed';
+      showToast(message, 'error');
     }
     return Promise.reject(error);
   },

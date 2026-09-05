@@ -56,7 +56,7 @@ docker compose ps   # STATUS should show "healthy"
 Or poll manually:
 
 ```bash
-until docker compose exec db pg_isready -U khushi -d ufac; do sleep 1; done
+until docker compose exec db pg_isready; do sleep 1; done
 ```
 
 ## Stopping Postgres

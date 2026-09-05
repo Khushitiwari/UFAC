@@ -22,7 +22,7 @@ const ContactForm = ({ initialValues, onSubmit, onCancel, submitLabel = 'Save Co
   }, []);
 
   const handleSubmit = useCallback(
-    (e) => {
+    async (e) => {
       e.preventDefault();
       const result = createContactSchema.safeParse(form);
       if (!result.success) {
@@ -33,7 +33,7 @@ const ContactForm = ({ initialValues, onSubmit, onCancel, submitLabel = 'Save Co
         setErrors(fieldErrors);
         return;
       }
-      onSubmit(result.data);
+      await onSubmit(result.data);
     },
     [form, onSubmit],
   );

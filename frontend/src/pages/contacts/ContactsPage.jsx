@@ -54,9 +54,14 @@ const ContactsPage = () => {
 
   const handleCreate = useCallback(
     async (formData) => {
-      await contactsApi.create(formData);
-      setModalOpen(false);
-      fetchContacts();
+      setError('');
+      try {
+        await contactsApi.create(formData);
+        setModalOpen(false);
+        await fetchContacts();
+      } catch (err) {
+        setError(err.response?.data?.error || 'Failed to create contact');
+      }
     },
     [fetchContacts],
   );
@@ -92,6 +97,7 @@ const ContactsPage = () => {
         </div>
       </div>
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="New Contact">
+        {error && <div className="alert-error">{error}</div>}
         <ContactForm onSubmit={handleCreate} onCancel={() => setModalOpen(false)} />
       </Modal>
     </PageShell>

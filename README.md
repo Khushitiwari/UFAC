@@ -21,42 +21,22 @@ Double-entry bookkeeping application for the Urban Furniture hackathon — Conta
 
 ## Quick Start
 
+See **[SETUP.md](./SETUP.md)** for full copy-paste setup (Docker Postgres + native `npm run dev`).
+
 ### Prerequisites
 
 - Node.js 20+
-- PostgreSQL 15+
+- Docker & Docker Compose
+- PostgreSQL via `docker compose up -d` (see SETUP.md)
 
-### 1. Database
-
-```bash
-createdb ufac
-```
-
-### 2. Backend
+### Short version
 
 ```bash
-cd backend
-cp .env.example .env
-# Edit DATABASE_URL, JWT_SECRET, JWT_EXPIRY
-
-npm install
-npx prisma migrate dev --name init
-npm run seed
-npm run dev
+cp .env.example .env && docker compose up -d
+cd backend && npm install && cp .env.example .env
+npx prisma migrate dev && node prisma/seed.js && npm run dev
+# second terminal: cd frontend && npm install && npm run dev
 ```
-
-API runs at `http://localhost:5000`.
-
-### 3. Frontend
-
-```bash
-cd frontend
-cp .env.example .env
-npm install
-npm run dev
-```
-
-App runs at `http://localhost:5173`.
 
 ### Seed credentials
 

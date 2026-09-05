@@ -1,22 +1,40 @@
 import { z } from 'zod';
+import { paymentMethodEnum } from './shared.schema.js';
 
-export const paymentTypeEnum = z.enum(['INBOUND', 'OUTBOUND']);
-export const paymentStatusEnum = z.enum(['DRAFT', 'POSTED', 'RECONCILED', 'CANCELLED']);
-
-export const createPaymentSchema = z.object({
-  number: z.string().min(1).max(50),
-  contactId: z.string().cuid(),
-  paymentDate: z.coerce.date(),
-  amount: z.coerce.number().positive(),
-  type: paymentTypeEnum,
-  status: paymentStatusEnum.optional(),
-  customerInvoiceId: z.string().cuid().optional().nullable(),
-  vendorBillId: z.string().cuid().optional().nullable(),
-  reference: z.string().max(100).optional().nullable(),
-});
-
-export const updatePaymentSchema = createPaymentSchema.partial().omit({ number: true });
+export const createPaymentSchema = z
+  .object({
+    contactId: z.string().cuid(),
+    billId: z.string().cuid().optional().nullable(),
+    invoiceId: z.string().cuid().optional().nullable(),
+    method: paymentMethodEnum,
+    amount: z.coerce.number().positive(),
+    date: z.coerce.date(),
+    reference: z.string().max(100).optional().nullable(),
+  })
+  .superRefine((data, ctx) => {
+    if (!data.billId && !data.invoiceId) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Either billId or invoiceId is required',
+        path: ['billId'],
+      });
+    }
+    if (data.billId && data.invoiceId) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Cannot specify both billId and invoiceId',
+        path: ['billId'],
+      });
+    }
+  });
 
 export const paymentIdParamSchema = z.object({
-  id: z.string().cuid(),
+  id: z.string().cuid('Invalid payment id'),
+});
+
+export const listPaymentsQuerySchema = z.object({
+  page: z.coerce.number().int().positive().optional(),
+  limit: z.coerce.number().int().positive().max(100).optional(),
+  contactId: z.string().cuid().optional(),
+  method: paymentMethodEnum.optional(),
 });

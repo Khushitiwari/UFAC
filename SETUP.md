@@ -86,4 +86,4 @@ node prisma/seed.js
 
 ## Port conflicts
 
-UFAC Postgres runs on host port **5437** (see `docker-compose.yml`). Ensure `DATABASE_URL` in `backend/.env` uses `@localhost:5437` with credentials `khushi` / `soha` / database `ufac`.
+UFAC Postgres runs on host port **5437** (see `docker-compose.yml`). Copy `.env.example` to `.env` and set your own credentials. Ensure `DATABASE_URL` in `backend/.env` uses `@localhost:5437` and database name `ufac`.

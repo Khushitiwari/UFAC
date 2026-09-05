@@ -4,7 +4,7 @@ import { useResourceList } from './useResourceList.js';
 
 export const useJournalEntries = (filters = {}) => {
   const fetchFn = useCallback((params) => journalEntriesApi.list(params), []);
-  return useResourceList(fetchFn, 'entries', filters);
+  return useResourceList(fetchFn, 'items', filters);
 };
 
 export default useJournalEntries;

@@ -7,10 +7,15 @@ import Modal from '../../components/common/Modal.jsx';
 import AccountForm from '../../components/forms/AccountForm.jsx';
 import LoadingSpinner from '../../components/common/LoadingSpinner.jsx';
 import { useAccount } from '../../hooks/useAccounts.js';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { canWrite, canDelete } from '../../utils/permissions.js';
 
 const AccountDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const write = canWrite(user);
+  const del = canDelete(user);
   const { account, loading, error, refetch } = useAccount(id);
   const [editOpen, setEditOpen] = useState(false);
 
@@ -33,7 +38,7 @@ const AccountDetailPage = () => {
   if (!account) return <div className="alert-error">Not found</div>;
 
   return (
-    <PageShell title={account.name} actions={<><Button variant="secondary" onClick={() => setEditOpen(true)}>Edit</Button><Button variant="secondary" onClick={handleDelete}>Delete</Button><Link to="/accounts"><Button variant="secondary">Back</Button></Link></>}>
+    <PageShell title={account.name} actions={<>{write && <Button variant="secondary" onClick={() => setEditOpen(true)}>Edit</Button>}{del && <Button variant="secondary" onClick={handleDelete}>Delete</Button>}<Link to="/accounts"><Button variant="secondary">Back</Button></Link></>}>
       <div className="card">
         <p><strong>Type:</strong> {account.type}</p>
         <p><strong>Active:</strong> {account.isActive !== false ? 'Yes' : 'No'}</p>

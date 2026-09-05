@@ -33,7 +33,7 @@ const JournalEntryPage = () => {
     async (data) => {
       await journalEntriesApi.create(data);
       showToast('Journal entry posted', 'success');
-      navigate('/journals');
+      navigate('/journals/entries');
     },
     [navigate, showToast],
   );

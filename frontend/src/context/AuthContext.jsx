@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { authApi } from '../api/index.js';
 
 const AuthContext = createContext(null);
@@ -9,6 +9,35 @@ export const AuthProvider = ({ children }) => {
     return stored ? JSON.parse(stored) : null;
   });
   const [loading, setLoading] = useState(false);
+  const [initializing, setInitializing] = useState(true);
+
+  const clearSession = useCallback(() => {
+    localStorage.removeItem('ufac_token');
+    localStorage.removeItem('ufac_user');
+    setUser(null);
+  }, []);
+
+  useEffect(() => {
+    const token = localStorage.getItem('ufac_token');
+    if (!token) {
+      setInitializing(false);
+      return;
+    }
+
+    authApi
+      .me()
+      .then(({ data }) => {
+        const userData = data.data;
+        localStorage.setItem('ufac_user', JSON.stringify(userData));
+        setUser(userData);
+      })
+      .catch(() => {
+        clearSession();
+      })
+      .finally(() => {
+        setInitializing(false);
+      });
+  }, [clearSession]);
 
   const login = useCallback(async (credentials) => {
     setLoading(true);
@@ -25,14 +54,12 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const logout = useCallback(() => {
-    localStorage.removeItem('ufac_token');
-    localStorage.removeItem('ufac_user');
-    setUser(null);
-  }, []);
+    clearSession();
+  }, [clearSession]);
 
   const value = useMemo(
-    () => ({ user, loading, login, logout, isAuthenticated: !!user }),
-    [user, loading, login, logout],
+    () => ({ user, loading, initializing, login, logout, isAuthenticated: !!user }),
+    [user, loading, initializing, login, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

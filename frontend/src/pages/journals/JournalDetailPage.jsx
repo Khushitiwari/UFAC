@@ -7,10 +7,15 @@ import Modal from '../../components/common/Modal.jsx';
 import JournalForm from '../../components/forms/JournalForm.jsx';
 import LoadingSpinner from '../../components/common/LoadingSpinner.jsx';
 import { useJournal } from '../../hooks/useJournals.js';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { canWrite, canDelete } from '../../utils/permissions.js';
 
 const JournalDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const write = canWrite(user);
+  const del = canDelete(user);
   const { journal, loading, error, refetch } = useJournal(id);
   const [editOpen, setEditOpen] = useState(false);
 
@@ -33,7 +38,7 @@ const JournalDetailPage = () => {
   if (!journal) return <div className="alert-error">Not found</div>;
 
   return (
-    <PageShell title={journal.name} actions={<><Button variant="secondary" onClick={() => setEditOpen(true)}>Edit</Button><Button variant="secondary" onClick={handleDelete}>Delete</Button><Link to="/journals"><Button variant="secondary">Back</Button></Link></>}>
+    <PageShell title={journal.name} actions={<>{write && <Button variant="secondary" onClick={() => setEditOpen(true)}>Edit</Button>}{del && <Button variant="secondary" onClick={handleDelete}>Delete</Button>}<Link to="/journals"><Button variant="secondary">Back</Button></Link></>}>
       <div className="card"><p><strong>Type:</strong> {journal.type}</p></div>
       <Modal isOpen={editOpen} onClose={() => setEditOpen(false)} title="Edit Journal">
         <JournalForm initialValues={journal} onSubmit={handleUpdate} onCancel={() => setEditOpen(false)} submitLabel="Update" />

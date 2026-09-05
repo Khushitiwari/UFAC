@@ -9,9 +9,13 @@ import AccountForm from '../../components/forms/AccountForm.jsx';
 import LoadingSpinner from '../../components/common/LoadingSpinner.jsx';
 import PaginationBar from '../../components/common/PaginationBar.jsx';
 import { useAccounts } from '../../hooks/useAccounts.js';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { canWrite } from '../../utils/permissions.js';
 
 const AccountsListPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const write = canWrite(user);
   const [modalOpen, setModalOpen] = useState(false);
   const { items, meta, loading, error, refetch, page, nextPage, prevPage } = useAccounts();
 
@@ -28,7 +32,7 @@ const AccountsListPage = () => {
   }, [refetch]);
 
   return (
-    <PageShell title="Chart of Accounts" actions={<Button onClick={() => setModalOpen(true)}>+ New Account</Button>}>
+    <PageShell title="Chart of Accounts" actions={write ? <Button onClick={() => setModalOpen(true)}>+ New Account</Button> : null}>
       {error && <div className="alert-error">{error}</div>}
       {loading ? <LoadingSpinner /> : <Table columns={columns} data={items} onRowClick={(r) => navigate(`/accounts/${r.id}`)} />}
       <PaginationBar meta={meta} page={page} onPrev={prevPage} onNext={nextPage} />

@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import Layout from '../components/common/Layout.jsx';
 import LoadingSpinner from '../components/common/LoadingSpinner.jsx';
+import { canViewReports } from '../utils/permissions.js';
 
 const LoginPage = lazy(() => import('../pages/LoginPage.jsx'));
 const DashboardPage = lazy(() => import('../pages/dashboard/DashboardPage.jsx'));
@@ -19,6 +20,7 @@ const AccountDetailPage = lazy(() => import('../pages/accounts/AccountDetailPage
 const JournalsListPage = lazy(() => import('../pages/journals/JournalsListPage.jsx'));
 const JournalDetailPage = lazy(() => import('../pages/journals/JournalDetailPage.jsx'));
 const JournalEntryPage = lazy(() => import('../pages/journals/JournalEntryPage.jsx'));
+const JournalEntriesListPage = lazy(() => import('../pages/journals/JournalEntriesListPage.jsx'));
 
 const PurchaseOrdersListPage = lazy(() => import('../pages/purchaseOrders/PurchaseOrdersListPage.jsx'));
 const PurchaseOrderDetailPage = lazy(() => import('../pages/purchaseOrders/PurchaseOrderDetailPage.jsx'));
@@ -47,8 +49,21 @@ const ProfitAndLossPage = lazy(() => import('../pages/reports/ProfitAndLossPage.
 const BudgetReportPage = lazy(() => import('../pages/reports/BudgetReportPage.jsx'));
 
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, initializing } = useAuth();
+  if (initializing) return <LoadingSpinner label="Loading session..." />;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
+  return children;
+};
+
+const StaffRoute = ({ children }) => {
+  const { user } = useAuth();
+  if (user?.role === 'CONTACT') return <Navigate to="/vendor-bills" replace />;
+  return children;
+};
+
+const ReportsRoute = ({ children }) => {
+  const { user } = useAuth();
+  if (!canViewReports(user)) return <Navigate to="/vendor-bills" replace />;
   return children;
 };
 
@@ -70,33 +85,35 @@ const AppRoutes = () => (
         }
       >
         <Route index element={<ContactHomeRedirect />} />
-        <Route path="contacts" element={<ContactsListPage />} />
-        <Route path="contacts/:id" element={<ContactDetailPage />} />
-        <Route path="products" element={<ProductsListPage />} />
-        <Route path="products/:id" element={<ProductDetailPage />} />
-        <Route path="accounts" element={<AccountsListPage />} />
-        <Route path="accounts/:id" element={<AccountDetailPage />} />
-        <Route path="journals" element={<JournalsListPage />} />
-        <Route path="journals/entry/new" element={<JournalEntryPage />} />
-        <Route path="journals/:id" element={<JournalDetailPage />} />
-        <Route path="purchase-orders" element={<PurchaseOrdersListPage />} />
-        <Route path="purchase-orders/:id" element={<PurchaseOrderDetailPage />} />
         <Route path="vendor-bills" element={<VendorBillsListPage />} />
         <Route path="vendor-bills/:id" element={<VendorBillDetailPage />} />
-        <Route path="sales-orders" element={<SalesOrdersListPage />} />
-        <Route path="sales-orders/:id" element={<SalesOrderDetailPage />} />
         <Route path="customer-invoices" element={<CustomerInvoicesListPage />} />
         <Route path="customer-invoices/:id" element={<CustomerInvoiceDetailPage />} />
         <Route path="payments" element={<PaymentsListPage />} />
         <Route path="payments/:id" element={<PaymentDetailPage />} />
-        <Route path="analytic-accounts" element={<AnalyticAccountsListPage />} />
-        <Route path="analytic-accounts/:id" element={<AnalyticAccountDetailPage />} />
-        <Route path="budgets" element={<BudgetsListPage />} />
-        <Route path="budgets/:id" element={<BudgetDetailPage />} />
-        <Route path="reports" element={<ReportsIndexPage />} />
-        <Route path="reports/balance-sheet" element={<BalanceSheetPage />} />
-        <Route path="reports/profit-loss" element={<ProfitAndLossPage />} />
-        <Route path="reports/budget" element={<BudgetReportPage />} />
+
+        <Route path="contacts" element={<StaffRoute><ContactsListPage /></StaffRoute>} />
+        <Route path="contacts/:id" element={<StaffRoute><ContactDetailPage /></StaffRoute>} />
+        <Route path="products" element={<StaffRoute><ProductsListPage /></StaffRoute>} />
+        <Route path="products/:id" element={<StaffRoute><ProductDetailPage /></StaffRoute>} />
+        <Route path="accounts" element={<StaffRoute><AccountsListPage /></StaffRoute>} />
+        <Route path="accounts/:id" element={<StaffRoute><AccountDetailPage /></StaffRoute>} />
+        <Route path="journals" element={<StaffRoute><JournalsListPage /></StaffRoute>} />
+        <Route path="journals/entries" element={<StaffRoute><JournalEntriesListPage /></StaffRoute>} />
+        <Route path="journals/entry/new" element={<StaffRoute><JournalEntryPage /></StaffRoute>} />
+        <Route path="journals/:id" element={<StaffRoute><JournalDetailPage /></StaffRoute>} />
+        <Route path="purchase-orders" element={<StaffRoute><PurchaseOrdersListPage /></StaffRoute>} />
+        <Route path="purchase-orders/:id" element={<StaffRoute><PurchaseOrderDetailPage /></StaffRoute>} />
+        <Route path="sales-orders" element={<StaffRoute><SalesOrdersListPage /></StaffRoute>} />
+        <Route path="sales-orders/:id" element={<StaffRoute><SalesOrderDetailPage /></StaffRoute>} />
+        <Route path="analytic-accounts" element={<StaffRoute><AnalyticAccountsListPage /></StaffRoute>} />
+        <Route path="analytic-accounts/:id" element={<StaffRoute><AnalyticAccountDetailPage /></StaffRoute>} />
+        <Route path="budgets" element={<StaffRoute><BudgetsListPage /></StaffRoute>} />
+        <Route path="budgets/:id" element={<StaffRoute><BudgetDetailPage /></StaffRoute>} />
+        <Route path="reports" element={<ReportsRoute><ReportsIndexPage /></ReportsRoute>} />
+        <Route path="reports/balance-sheet" element={<ReportsRoute><BalanceSheetPage /></ReportsRoute>} />
+        <Route path="reports/profit-loss" element={<ReportsRoute><ProfitAndLossPage /></ReportsRoute>} />
+        <Route path="reports/budget" element={<ReportsRoute><BudgetReportPage /></ReportsRoute>} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

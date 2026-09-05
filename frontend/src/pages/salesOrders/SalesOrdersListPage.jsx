@@ -9,10 +9,14 @@ import SalesOrderForm from '../../components/forms/SalesOrderForm.jsx';
 import LoadingSpinner from '../../components/common/LoadingSpinner.jsx';
 import PaginationBar from '../../components/common/PaginationBar.jsx';
 import { useSalesOrders } from '../../hooks/useSalesOrders.js';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { canWrite } from '../../utils/permissions.js';
 import { formatCurrency, formatDate } from '../../utils/format.js';
 
 const SalesOrdersListPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const write = canWrite(user);
   const [modalOpen, setModalOpen] = useState(false);
   const [contacts, setContacts] = useState([]);
   const [products, setProducts] = useState([]);
@@ -41,7 +45,7 @@ const SalesOrdersListPage = () => {
   }, [refetch]);
 
   return (
-    <PageShell title="Sales Orders" actions={<Button onClick={() => setModalOpen(true)}>+ New SO</Button>}>
+    <PageShell title="Sales Orders" actions={write ? <Button onClick={() => setModalOpen(true)}>+ New SO</Button> : null}>
       {error && <div className="alert-error">{error}</div>}
       {loading ? <LoadingSpinner /> : <Table columns={columns} data={items} onRowClick={(r) => navigate(`/sales-orders/${r.id}`)} />}
       <PaginationBar meta={meta} page={page} onPrev={prevPage} onNext={nextPage} />

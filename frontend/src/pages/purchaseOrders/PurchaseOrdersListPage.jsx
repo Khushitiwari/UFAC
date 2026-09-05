@@ -9,10 +9,14 @@ import PurchaseOrderForm from '../../components/forms/PurchaseOrderForm.jsx';
 import LoadingSpinner from '../../components/common/LoadingSpinner.jsx';
 import PaginationBar from '../../components/common/PaginationBar.jsx';
 import { usePurchaseOrders } from '../../hooks/usePurchaseOrders.js';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { canWrite } from '../../utils/permissions.js';
 import { formatCurrency, formatDate } from '../../utils/format.js';
 
 const PurchaseOrdersListPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const write = canWrite(user);
   const [modalOpen, setModalOpen] = useState(false);
   const [contacts, setContacts] = useState([]);
   const [products, setProducts] = useState([]);
@@ -44,7 +48,7 @@ const PurchaseOrdersListPage = () => {
   }, [refetch]);
 
   return (
-    <PageShell title="Purchase Orders" actions={<Button onClick={() => setModalOpen(true)}>+ New PO</Button>}>
+    <PageShell title="Purchase Orders" actions={write ? <Button onClick={() => setModalOpen(true)}>+ New PO</Button> : null}>
       {error && <div className="alert-error">{error}</div>}
       {loading ? <LoadingSpinner /> : <Table columns={columns} data={items} onRowClick={(r) => navigate(`/purchase-orders/${r.id}`)} />}
       <PaginationBar meta={meta} page={page} onPrev={prevPage} onNext={nextPage} />

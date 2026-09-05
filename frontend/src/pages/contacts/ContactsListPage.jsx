@@ -10,9 +10,13 @@ import LoadingSpinner from '../../components/common/LoadingSpinner.jsx';
 import PaginationBar from '../../components/common/PaginationBar.jsx';
 import { useDebounce } from '../../hooks/useDebounce.js';
 import { useContacts } from '../../hooks/useContacts.js';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { canWrite } from '../../utils/permissions.js';
 
 const ContactsListPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const write = canWrite(user);
   const [search, setSearch] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const debouncedSearch = useDebounce(search);
@@ -39,7 +43,7 @@ const ContactsListPage = () => {
   );
 
   return (
-    <PageShell title="Contacts" actions={<Button onClick={() => setModalOpen(true)}>+ New Contact</Button>}>
+    <PageShell title="Contacts" actions={write ? <Button onClick={() => setModalOpen(true)}>+ New Contact</Button> : null}>
       <div style={{ marginBottom: '1rem' }}>
         <input
           placeholder="Search contacts..."

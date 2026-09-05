@@ -9,9 +9,13 @@ import JournalForm from '../../components/forms/JournalForm.jsx';
 import LoadingSpinner from '../../components/common/LoadingSpinner.jsx';
 import PaginationBar from '../../components/common/PaginationBar.jsx';
 import { useJournals } from '../../hooks/useJournals.js';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { canWrite } from '../../utils/permissions.js';
 
 const JournalsListPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const write = canWrite(user);
   const [modalOpen, setModalOpen] = useState(false);
   const { items, meta, loading, error, refetch, page, nextPage, prevPage } = useJournals();
 
@@ -30,10 +34,12 @@ const JournalsListPage = () => {
     <PageShell
       title="Journals"
       actions={
-        <>
-          <Link to="/journals/entry/new"><Button variant="secondary">Manual Entry</Button></Link>
-          <Button onClick={() => setModalOpen(true)}>+ New Journal</Button>
-        </>
+        write ? (
+          <>
+            <Link to="/journals/entry/new"><Button variant="secondary">Manual Entry</Button></Link>
+            <Button onClick={() => setModalOpen(true)}>+ New Journal</Button>
+          </>
+        ) : null
       }
     >
       {error && <div className="alert-error">{error}</div>}

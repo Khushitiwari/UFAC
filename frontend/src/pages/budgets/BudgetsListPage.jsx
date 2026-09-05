@@ -10,11 +10,13 @@ import BudgetForm from '../../components/forms/BudgetForm.jsx';
 import LoadingSpinner from '../../components/common/LoadingSpinner.jsx';
 import PaginationBar from '../../components/common/PaginationBar.jsx';
 import { useBudgets } from '../../hooks/useBudgets.js';
+import { canWrite } from '../../utils/permissions.js';
 import { formatCurrency, formatDate } from '../../utils/format.js';
 
 const BudgetsListPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const write = canWrite(user);
   const [modalOpen, setModalOpen] = useState(false);
   const [analyticAccounts, setAnalyticAccounts] = useState([]);
   const { items, meta, loading, error, refetch, page, nextPage, prevPage } = useBudgets();
@@ -39,7 +41,7 @@ const BudgetsListPage = () => {
   }, [refetch, user]);
 
   return (
-    <PageShell title="Budget" actions={<Button onClick={() => setModalOpen(true)}>+ New Budget</Button>}>
+    <PageShell title="Budget" actions={write ? <Button onClick={() => setModalOpen(true)}>+ New Budget</Button> : null}>
       {error && <div className="alert-error">{error}</div>}
       {loading ? <LoadingSpinner /> : <Table columns={columns} data={items} onRowClick={(r) => navigate(`/budgets/${r.id}`)} />}
       <PaginationBar meta={meta} page={page} onPrev={prevPage} onNext={nextPage} />

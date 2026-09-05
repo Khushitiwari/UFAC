@@ -1,23 +1,42 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { paymentsApi } from '../../api/index.js';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { paymentsApi, customerInvoicesApi, contactsApi, productsApi } from '../../api/index.js';
 import PageShell from '../../components/common/PageShell.jsx';
 import Button from '../../components/common/Button.jsx';
 import Table from '../../components/common/Table.jsx';
 import Modal from '../../components/common/Modal.jsx';
 import PaymentForm from '../../components/forms/PaymentForm.jsx';
+import CustomerInvoiceForm from '../../components/forms/CustomerInvoiceForm.jsx';
 import LoadingSpinner from '../../components/common/LoadingSpinner.jsx';
 import { useCustomerInvoice } from '../../hooks/useCustomerInvoices.js';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { canWrite, canDelete } from '../../utils/permissions.js';
 import { formatCurrency, formatDate } from '../../utils/format.js';
 import { useToast } from '../../context/ToastContext.jsx';
 
 const CustomerInvoiceDetailPage = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const { showToast } = useToast();
+  const write = canWrite(user);
+  const del = canDelete(user);
   const { customerInvoice, loading, error, refetch } = useCustomerInvoice(id);
   const [paymentOpen, setPaymentOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [contacts, setContacts] = useState([]);
+  const [products, setProducts] = useState([]);
 
   useEffect(() => { refetch(); }, [refetch]);
+
+  useEffect(() => {
+    if (!editOpen) return;
+    (async () => {
+      const [cRes, pRes] = await Promise.all([contactsApi.list({ limit: 100 }), productsApi.list({ limit: 100 })]);
+      setContacts((cRes.data.data.contacts ?? []).filter((c) => c.type === 'CUSTOMER' || c.type === 'BOTH'));
+      setProducts(pRes.data.data.products ?? []);
+    })();
+  }, [editOpen]);
 
   const paidAmount = useMemo(
     () => (customerInvoice?.payments || []).reduce((s, p) => s + Number(p.amount || 0), 0),
@@ -55,16 +74,34 @@ const CustomerInvoiceDetailPage = () => {
     [id, customerInvoice, refetch, showToast],
   );
 
+  const handleUpdate = useCallback(async (data) => {
+    await customerInvoicesApi.update(id, data);
+    showToast('Customer invoice updated', 'success');
+    setEditOpen(false);
+    await refetch();
+  }, [id, refetch, showToast]);
+
+  const handleDelete = useCallback(async () => {
+    if (!window.confirm('Delete this customer invoice?')) return;
+    await customerInvoicesApi.remove(id);
+    navigate('/customer-invoices');
+  }, [id, navigate]);
+
   if (loading) return <LoadingSpinner />;
   if (error) return <div className="alert-error">{error}</div>;
   if (!customerInvoice) return <div className="alert-error">Not found</div>;
+
+  const hasPayments = (customerInvoice.payments || []).length > 0;
+  const canModify = write && !hasPayments;
 
   return (
     <PageShell
       title={`Invoice ${customerInvoice.number || customerInvoice.id?.slice(0, 8)}`}
       actions={
         <>
-          <Button onClick={() => setPaymentOpen(true)} disabled={remaining <= 0}>Record Payment</Button>
+          {write && <Button onClick={() => setPaymentOpen(true)} disabled={remaining <= 0}>Record Payment</Button>}
+          {canModify && <Button variant="secondary" onClick={() => setEditOpen(true)}>Edit</Button>}
+          {canModify && del && <Button variant="secondary" onClick={handleDelete}>Delete</Button>}
           <Link to="/customer-invoices"><Button variant="secondary">Back</Button></Link>
         </>
       }
@@ -86,6 +123,16 @@ const CustomerInvoiceDetailPage = () => {
           maxAmount={remaining}
           onSubmit={handlePayment}
           onCancel={() => setPaymentOpen(false)}
+        />
+      </Modal>
+      <Modal isOpen={editOpen} onClose={() => setEditOpen(false)} title="Edit Customer Invoice">
+        <CustomerInvoiceForm
+          initialValues={customerInvoice}
+          contacts={contacts}
+          products={products}
+          onSubmit={handleUpdate}
+          onCancel={() => setEditOpen(false)}
+          submitLabel="Update"
         />
       </Modal>
     </PageShell>

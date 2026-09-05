@@ -1,20 +1,44 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { vendorBillsApi } from '../../api/index.js';
+import { purchaseOrdersApi, vendorBillsApi, contactsApi, productsApi } from '../../api/index.js';
 import PageShell from '../../components/common/PageShell.jsx';
 import Button from '../../components/common/Button.jsx';
 import Table from '../../components/common/Table.jsx';
+import Modal from '../../components/common/Modal.jsx';
+import PurchaseOrderForm from '../../components/forms/PurchaseOrderForm.jsx';
 import LoadingSpinner from '../../components/common/LoadingSpinner.jsx';
 import { usePurchaseOrder } from '../../hooks/usePurchaseOrders.js';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { canWrite, canDelete } from '../../utils/permissions.js';
 import { formatCurrency, formatDate } from '../../utils/format.js';
+import { useToast } from '../../context/ToastContext.jsx';
 
 const PurchaseOrderDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { showToast } = useToast();
+  const write = canWrite(user);
+  const del = canDelete(user);
   const { purchaseOrder, loading, error, refetch } = usePurchaseOrder(id);
   const [converting, setConverting] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [contacts, setContacts] = useState([]);
+  const [products, setProducts] = useState([]);
 
   useEffect(() => { refetch(); }, [refetch]);
+
+  useEffect(() => {
+    if (!editOpen) return;
+    (async () => {
+      const [cRes, pRes] = await Promise.all([
+        contactsApi.list({ limit: 100, type: 'VENDOR' }),
+        productsApi.list({ limit: 100 }),
+      ]);
+      setContacts(cRes.data.data.contacts ?? []);
+      setProducts(pRes.data.data.products ?? []);
+    })();
+  }, [editOpen]);
 
   const lineColumns = useMemo(() => [
     { key: 'product', label: 'Product', render: (r) => r.product?.name || r.productId },
@@ -38,20 +62,38 @@ const PurchaseOrderDetailPage = () => {
     }
   }, [id, navigate]);
 
+  const handleUpdate = useCallback(async (data) => {
+    await purchaseOrdersApi.update(id, data);
+    showToast('Purchase order updated', 'success');
+    setEditOpen(false);
+    await refetch();
+  }, [id, refetch, showToast]);
+
+  const handleDelete = useCallback(async () => {
+    if (!window.confirm('Delete this purchase order?')) return;
+    await purchaseOrdersApi.remove(id);
+    navigate('/purchase-orders');
+  }, [id, navigate]);
+
   if (loading) return <LoadingSpinner />;
   if (error) return <div className="alert-error">{error}</div>;
   if (!purchaseOrder) return <div className="alert-error">Not found</div>;
 
-  const canConvert = purchaseOrder.status === 'CONFIRMED';
+  const canConvert = write && purchaseOrder.status === 'CONFIRMED';
+  const canModify = write && purchaseOrder.status !== 'BILLED';
 
   return (
     <PageShell
       title={`PO ${purchaseOrder.number || purchaseOrder.id?.slice(0, 8)}`}
       actions={
         <>
-          <Button onClick={handleConvert} disabled={!canConvert || converting}>
-            {converting ? 'Converting...' : 'Convert to Bill'}
-          </Button>
+          {canConvert && (
+            <Button onClick={handleConvert} disabled={converting}>
+              {converting ? 'Converting...' : 'Convert to Bill'}
+            </Button>
+          )}
+          {canModify && <Button variant="secondary" onClick={() => setEditOpen(true)}>Edit</Button>}
+          {canModify && del && <Button variant="secondary" onClick={handleDelete}>Delete</Button>}
           <Link to="/purchase-orders"><Button variant="secondary">Back</Button></Link>
         </>
       }
@@ -61,10 +103,22 @@ const PurchaseOrderDetailPage = () => {
         <p><strong>Date:</strong> {formatDate(purchaseOrder.date)}</p>
         <p><strong>Status:</strong> {purchaseOrder.status}</p>
         <p><strong>Total:</strong> {formatCurrency(purchaseOrder.totalAmount)}</p>
-        {!canConvert && <p style={{ color: 'var(--color-muted)', fontSize: '0.85rem' }}>Convert to Bill is available when status is CONFIRMED.</p>}
+        {write && !canConvert && purchaseOrder.status !== 'BILLED' && (
+          <p style={{ color: 'var(--color-muted)', fontSize: '0.85rem' }}>Convert to Bill is available when status is CONFIRMED.</p>
+        )}
       </div>
       <h3>Lines</h3>
       <Table columns={lineColumns} data={purchaseOrder.lines || []} emptyMessage="No lines" />
+      <Modal isOpen={editOpen} onClose={() => setEditOpen(false)} title="Edit Purchase Order">
+        <PurchaseOrderForm
+          initialValues={purchaseOrder}
+          contacts={contacts}
+          products={products}
+          onSubmit={handleUpdate}
+          onCancel={() => setEditOpen(false)}
+          submitLabel="Update"
+        />
+      </Modal>
     </PageShell>
   );
 };

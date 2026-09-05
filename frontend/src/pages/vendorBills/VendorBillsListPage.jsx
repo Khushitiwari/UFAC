@@ -9,10 +9,14 @@ import VendorBillForm from '../../components/forms/VendorBillForm.jsx';
 import LoadingSpinner from '../../components/common/LoadingSpinner.jsx';
 import PaginationBar from '../../components/common/PaginationBar.jsx';
 import { useVendorBills } from '../../hooks/useVendorBills.js';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { canWrite } from '../../utils/permissions.js';
 import { formatCurrency, formatDate } from '../../utils/format.js';
 
 const VendorBillsListPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const write = canWrite(user);
   const [modalOpen, setModalOpen] = useState(false);
   const [contacts, setContacts] = useState([]);
   const [products, setProducts] = useState([]);
@@ -41,7 +45,7 @@ const VendorBillsListPage = () => {
   }, [refetch]);
 
   return (
-    <PageShell title="Vendor Bills" actions={<Button onClick={() => setModalOpen(true)}>+ New Bill</Button>}>
+    <PageShell title="Vendor Bills" actions={write ? <Button onClick={() => setModalOpen(true)}>+ New Bill</Button> : null}>
       {error && <div className="alert-error">{error}</div>}
       {loading ? <LoadingSpinner /> : <Table columns={columns} data={items} onRowClick={(r) => navigate(`/vendor-bills/${r.id}`)} />}
       <PaginationBar meta={meta} page={page} onPrev={prevPage} onNext={nextPage} />

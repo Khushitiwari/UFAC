@@ -7,11 +7,16 @@ import Modal from '../../components/common/Modal.jsx';
 import BudgetForm from '../../components/forms/BudgetForm.jsx';
 import LoadingSpinner from '../../components/common/LoadingSpinner.jsx';
 import { useBudget } from '../../hooks/useBudgets.js';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { canWrite, canDelete } from '../../utils/permissions.js';
 import { formatCurrency, formatDate } from '../../utils/format.js';
 
 const BudgetDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const write = canWrite(user);
+  const del = canDelete(user);
   const { budget, loading, error, refetch } = useBudget(id);
   const [editOpen, setEditOpen] = useState(false);
   const [analyticAccounts, setAnalyticAccounts] = useState([]);
@@ -38,7 +43,7 @@ const BudgetDetailPage = () => {
   if (!budget) return <div className="alert-error">Not found</div>;
 
   return (
-    <PageShell title={budget.name} actions={<><Button variant="secondary" onClick={() => setEditOpen(true)}>Edit</Button><Button variant="secondary" onClick={handleDelete}>Delete</Button><Link to="/budgets"><Button variant="secondary">Back</Button></Link></>}>
+    <PageShell title={budget.name} actions={<>{write && <Button variant="secondary" onClick={() => setEditOpen(true)}>Edit</Button>}{del && <Button variant="secondary" onClick={handleDelete}>Delete</Button>}<Link to="/budgets"><Button variant="secondary">Back</Button></Link></>}>
       <div className="card">
         <p><strong>Period:</strong> {formatDate(budget.periodStart)} – {formatDate(budget.periodEnd)}</p>
         <p><strong>Planned:</strong> {formatCurrency(budget.plannedAmount)}</p>

@@ -10,10 +10,14 @@ import LoadingSpinner from '../../components/common/LoadingSpinner.jsx';
 import PaginationBar from '../../components/common/PaginationBar.jsx';
 import { useDebounce } from '../../hooks/useDebounce.js';
 import { useProducts } from '../../hooks/useProducts.js';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { canWrite } from '../../utils/permissions.js';
 import { formatCurrency } from '../../utils/format.js';
 
 const ProductsListPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const write = canWrite(user);
   const [search, setSearch] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const debouncedSearch = useDebounce(search);
@@ -37,7 +41,7 @@ const ProductsListPage = () => {
   }, [refetch]);
 
   return (
-    <PageShell title="Products" actions={<Button onClick={() => setModalOpen(true)}>+ New Product</Button>}>
+    <PageShell title="Products" actions={write ? <Button onClick={() => setModalOpen(true)}>+ New Product</Button> : null}>
       <input placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} style={{ marginBottom: '1rem', padding: '0.5rem', width: 280 }} />
       {error && <div className="alert-error">{error}</div>}
       {loading ? <LoadingSpinner /> : <Table columns={columns} data={items} onRowClick={(r) => navigate(`/products/${r.id}`)} />}

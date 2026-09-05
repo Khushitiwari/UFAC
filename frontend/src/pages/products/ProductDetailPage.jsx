@@ -7,11 +7,16 @@ import Modal from '../../components/common/Modal.jsx';
 import ProductForm from '../../components/forms/ProductForm.jsx';
 import LoadingSpinner from '../../components/common/LoadingSpinner.jsx';
 import { useProduct } from '../../hooks/useProducts.js';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { canWrite, canDelete } from '../../utils/permissions.js';
 import { formatCurrency } from '../../utils/format.js';
 
 const ProductDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const write = canWrite(user);
+  const del = canDelete(user);
   const { product, loading, error, refetch } = useProduct(id);
   const [editOpen, setEditOpen] = useState(false);
 
@@ -34,7 +39,7 @@ const ProductDetailPage = () => {
   if (!product) return <div className="alert-error">Not found</div>;
 
   return (
-    <PageShell title={product.name} actions={<><Button variant="secondary" onClick={() => setEditOpen(true)}>Edit</Button><Button variant="secondary" onClick={handleDelete}>Delete</Button><Link to="/products"><Button variant="secondary">Back</Button></Link></>}>
+    <PageShell title={product.name} actions={<>{write && <Button variant="secondary" onClick={() => setEditOpen(true)}>Edit</Button>}{del && <Button variant="secondary" onClick={handleDelete}>Delete</Button>}<Link to="/products"><Button variant="secondary">Back</Button></Link></>}>
       <div className="card">
         <p><strong>Type:</strong> {product.type}</p>
         <p><strong>Category:</strong> {product.category}</p>

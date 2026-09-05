@@ -9,9 +9,13 @@ import AnalyticAccountForm from '../../components/forms/AnalyticAccountForm.jsx'
 import LoadingSpinner from '../../components/common/LoadingSpinner.jsx';
 import PaginationBar from '../../components/common/PaginationBar.jsx';
 import { useAnalyticAccounts } from '../../hooks/useAnalyticAccounts.js';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { canWrite } from '../../utils/permissions.js';
 
 const AnalyticAccountsListPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const write = canWrite(user);
   const [modalOpen, setModalOpen] = useState(false);
   const { items, meta, loading, error, refetch, page, nextPage, prevPage } = useAnalyticAccounts();
 
@@ -28,7 +32,7 @@ const AnalyticAccountsListPage = () => {
   }, [refetch]);
 
   return (
-    <PageShell title="Analytic Accounts" actions={<Button onClick={() => setModalOpen(true)}>+ New</Button>}>
+    <PageShell title="Analytic Accounts" actions={write ? <Button onClick={() => setModalOpen(true)}>+ New</Button> : null}>
       {error && <div className="alert-error">{error}</div>}
       {loading ? <LoadingSpinner /> : <Table columns={columns} data={items} onRowClick={(r) => navigate(`/analytic-accounts/${r.id}`)} />}
       <PaginationBar meta={meta} page={page} onPrev={prevPage} onNext={nextPage} />

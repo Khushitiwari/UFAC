@@ -1,23 +1,42 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { paymentsApi } from '../../api/index.js';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { paymentsApi, vendorBillsApi, contactsApi, productsApi } from '../../api/index.js';
 import PageShell from '../../components/common/PageShell.jsx';
 import Button from '../../components/common/Button.jsx';
 import Table from '../../components/common/Table.jsx';
 import Modal from '../../components/common/Modal.jsx';
 import PaymentForm from '../../components/forms/PaymentForm.jsx';
+import VendorBillForm from '../../components/forms/VendorBillForm.jsx';
 import LoadingSpinner from '../../components/common/LoadingSpinner.jsx';
 import { useVendorBill } from '../../hooks/useVendorBills.js';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { canWrite, canDelete } from '../../utils/permissions.js';
 import { formatCurrency, formatDate } from '../../utils/format.js';
 import { useToast } from '../../context/ToastContext.jsx';
 
 const VendorBillDetailPage = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const { showToast } = useToast();
+  const write = canWrite(user);
+  const del = canDelete(user);
   const { vendorBill, loading, error, refetch } = useVendorBill(id);
   const [paymentOpen, setPaymentOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [contacts, setContacts] = useState([]);
+  const [products, setProducts] = useState([]);
 
   useEffect(() => { refetch(); }, [refetch]);
+
+  useEffect(() => {
+    if (!editOpen) return;
+    (async () => {
+      const [cRes, pRes] = await Promise.all([contactsApi.list({ limit: 100 }), productsApi.list({ limit: 100 })]);
+      setContacts((cRes.data.data.contacts ?? []).filter((c) => c.type === 'VENDOR' || c.type === 'BOTH'));
+      setProducts(pRes.data.data.products ?? []);
+    })();
+  }, [editOpen]);
 
   const paidAmount = useMemo(
     () => (vendorBill?.payments || []).reduce((s, p) => s + Number(p.amount || 0), 0),
@@ -51,16 +70,34 @@ const VendorBillDetailPage = () => {
     [id, vendorBill, refetch, showToast],
   );
 
+  const handleUpdate = useCallback(async (data) => {
+    await vendorBillsApi.update(id, data);
+    showToast('Vendor bill updated', 'success');
+    setEditOpen(false);
+    await refetch();
+  }, [id, refetch, showToast]);
+
+  const handleDelete = useCallback(async () => {
+    if (!window.confirm('Delete this vendor bill?')) return;
+    await vendorBillsApi.remove(id);
+    navigate('/vendor-bills');
+  }, [id, navigate]);
+
   if (loading) return <LoadingSpinner />;
   if (error) return <div className="alert-error">{error}</div>;
   if (!vendorBill) return <div className="alert-error">Not found</div>;
+
+  const hasPayments = (vendorBill.payments || []).length > 0;
+  const canModify = write && !hasPayments;
 
   return (
     <PageShell
       title={`Bill ${vendorBill.number || vendorBill.id?.slice(0, 8)}`}
       actions={
         <>
-          <Button onClick={() => setPaymentOpen(true)} disabled={remaining <= 0}>Record Payment</Button>
+          {write && <Button onClick={() => setPaymentOpen(true)} disabled={remaining <= 0}>Record Payment</Button>}
+          {canModify && <Button variant="secondary" onClick={() => setEditOpen(true)}>Edit</Button>}
+          {canModify && del && <Button variant="secondary" onClick={handleDelete}>Delete</Button>}
           <Link to="/vendor-bills"><Button variant="secondary">Back</Button></Link>
         </>
       }
@@ -84,6 +121,16 @@ const VendorBillDetailPage = () => {
           maxAmount={remaining}
           onSubmit={handlePayment}
           onCancel={() => setPaymentOpen(false)}
+        />
+      </Modal>
+      <Modal isOpen={editOpen} onClose={() => setEditOpen(false)} title="Edit Vendor Bill">
+        <VendorBillForm
+          initialValues={vendorBill}
+          contacts={contacts}
+          products={products}
+          onSubmit={handleUpdate}
+          onCancel={() => setEditOpen(false)}
+          submitLabel="Update"
         />
       </Modal>
     </PageShell>

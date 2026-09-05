@@ -7,11 +7,16 @@ import Modal from '../../components/common/Modal.jsx';
 import ContactForm from '../../components/forms/ContactForm.jsx';
 import LoadingSpinner from '../../components/common/LoadingSpinner.jsx';
 import { useContact } from '../../hooks/useContacts.js';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { canWrite, canDelete } from '../../utils/permissions.js';
 import { formatDate } from '../../utils/format.js';
 
 const ContactDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const write = canWrite(user);
+  const del = canDelete(user);
   const { contact, loading, error, refetch } = useContact(id);
   const [editOpen, setEditOpen] = useState(false);
 
@@ -43,8 +48,8 @@ const ContactDetailPage = () => {
       title={contact.name}
       actions={
         <>
-          <Button variant="secondary" onClick={() => setEditOpen(true)}>Edit</Button>
-          <Button variant="secondary" onClick={handleDelete}>Delete</Button>
+          {write && <Button variant="secondary" onClick={() => setEditOpen(true)}>Edit</Button>}
+          {del && <Button variant="secondary" onClick={handleDelete}>Delete</Button>}
           <Link to="/contacts"><Button variant="secondary">Back</Button></Link>
         </>
       }

@@ -9,10 +9,14 @@ import CustomerInvoiceForm from '../../components/forms/CustomerInvoiceForm.jsx'
 import LoadingSpinner from '../../components/common/LoadingSpinner.jsx';
 import PaginationBar from '../../components/common/PaginationBar.jsx';
 import { useCustomerInvoices } from '../../hooks/useCustomerInvoices.js';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { canWrite } from '../../utils/permissions.js';
 import { formatCurrency, formatDate } from '../../utils/format.js';
 
 const CustomerInvoicesListPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const write = canWrite(user);
   const [modalOpen, setModalOpen] = useState(false);
   const [contacts, setContacts] = useState([]);
   const [products, setProducts] = useState([]);
@@ -41,7 +45,7 @@ const CustomerInvoicesListPage = () => {
   }, [refetch]);
 
   return (
-    <PageShell title="Customer Invoices" actions={<Button onClick={() => setModalOpen(true)}>+ New Invoice</Button>}>
+    <PageShell title="Customer Invoices" actions={write ? <Button onClick={() => setModalOpen(true)}>+ New Invoice</Button> : null}>
       {error && <div className="alert-error">{error}</div>}
       {loading ? <LoadingSpinner /> : <Table columns={columns} data={items} onRowClick={(r) => navigate(`/customer-invoices/${r.id}`)} />}
       <PaginationBar meta={meta} page={page} onPrev={prevPage} onNext={nextPage} />

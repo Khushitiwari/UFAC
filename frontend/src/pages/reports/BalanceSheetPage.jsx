@@ -4,7 +4,7 @@ import { reportsApi } from '../../api/index.js';
 import PageShell from '../../components/common/PageShell.jsx';
 import Button from '../../components/common/Button.jsx';
 import TableSkeleton from '../../components/common/TableSkeleton.jsx';
-import { formatCurrency } from '../../utils/format.js';
+import { formatCurrency, formatDate } from '../../utils/format.js';
 import { toDateInput } from '../../utils/formHelpers.js';
 
 const BalanceSheetPage = () => {
@@ -31,15 +31,20 @@ const BalanceSheetPage = () => {
 
   const sections = useMemo(() => {
     if (!report) return [];
+    const { sections: data = {}, totals = {} } = report;
     return [
-      { title: 'Assets', items: report.assets || [], total: report.totalAssets },
-      { title: 'Liabilities', items: report.liabilities || [], total: report.totalLiabilities },
-      { title: 'Capital', items: report.capital || [], total: report.totalCapital },
+      { title: 'Assets', items: data.ASSET || [], total: totals.ASSET },
+      { title: 'Liabilities', items: data.LIABILITY || [], total: totals.LIABILITY },
+      { title: 'Capital', items: data.CAPITAL || [], total: totals.CAPITAL },
     ];
   }, [report]);
 
   return (
-    <PageShell title="Balance Sheet" actions={<Link to="/reports"><Button variant="secondary">Back</Button></Link>}>
+    <PageShell
+      title="Balance Sheet"
+      subtitle={report?.asOfDate ? `As of ${formatDate(report.asOfDate)}` : undefined}
+      actions={<Link to="/reports"><Button variant="secondary">Back</Button></Link>}
+    >
       <div style={{ marginBottom: '1rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
         <label htmlFor="date">As of</label>
         <input id="date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />

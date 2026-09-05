@@ -4,7 +4,7 @@ import { reportsApi } from '../../api/index.js';
 import PageShell from '../../components/common/PageShell.jsx';
 import Button from '../../components/common/Button.jsx';
 import TableSkeleton from '../../components/common/TableSkeleton.jsx';
-import { formatCurrency } from '../../utils/format.js';
+import { formatCurrency, formatDate } from '../../utils/format.js';
 import { toDateInput } from '../../utils/formHelpers.js';
 
 const ProfitAndLossPage = () => {
@@ -35,18 +35,26 @@ const ProfitAndLossPage = () => {
   const sections = useMemo(() => {
     if (!report) return [];
     return [
-      { title: 'Income', items: report.income || [], total: report.totalIncome },
-      { title: 'Expenses', items: report.expenses || [], total: report.totalExpenses },
+      { title: 'Income', items: report.income?.lines || [], total: report.income?.total },
+      { title: 'Expenses', items: report.expenses?.lines || [], total: report.expenses?.total },
     ];
   }, [report]);
 
-  const netProfit = useMemo(
-    () => (report ? Number(report.netProfit ?? (report.totalIncome || 0) - (report.totalExpenses || 0)) : 0),
+  const netIncome = useMemo(
+    () => (report ? Number(report.netIncome ?? 0) : 0),
     [report],
   );
 
+  const periodLabel = report?.startDate && report?.endDate
+    ? `${formatDate(report.startDate)} – ${formatDate(report.endDate)}`
+    : null;
+
   return (
-    <PageShell title="Profit & Loss" actions={<Link to="/reports"><Button variant="secondary">Back</Button></Link>}>
+    <PageShell
+      title="Profit & Loss"
+      subtitle={periodLabel}
+      actions={<Link to="/reports"><Button variant="secondary">Back</Button></Link>}
+    >
       <div style={{ marginBottom: '1rem', display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
         <label>From <input type="date" value={start} onChange={(e) => setStart(e.target.value)} /></label>
         <label>To <input type="date" value={end} onChange={(e) => setEnd(e.target.value)} /></label>
@@ -77,7 +85,7 @@ const ProfitAndLossPage = () => {
             </div>
           ))}
           <div className="card" style={{ fontWeight: 700 }}>
-            Net Profit: {formatCurrency(netProfit)}
+            Net Income: {formatCurrency(netIncome)}
           </div>
         </>
       )}

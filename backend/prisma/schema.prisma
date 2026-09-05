@@ -132,7 +132,7 @@ model Product {
   type                ProductType         @default(GOODS)
   salesPrice          Decimal             @db.Decimal(12, 2)
   cost                Decimal             @default(0) @db.Decimal(12, 2)
-  category            String
+  category            String              @required
   description         String?
   status              RecordStatus        @default(ACTIVE)
   createdAt           DateTime            @default(now())

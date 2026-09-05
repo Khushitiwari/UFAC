@@ -21,7 +21,7 @@ router.get('/health', (_req, res) => {
   res.json({ success: true, data: { status: 'ok', service: 'ufac-api' } });
 });
 
-router.use('/auth', authRateLimiter, authRoutes);
+router.use('/auth',authRateLimiter,  authRoutes);
 router.use('/contacts', contactRoutes);
 router.use('/products', productRoutes);
 router.use('/accounts', accountRoutes);

@@ -1,20 +1,27 @@
 import { z } from 'zod';
 
 export const createBudgetSchema = z.object({
-  accountId: z.string().cuid(),
-  analyticAccountId: z.string().cuid().optional().nullable(),
-  fiscalYear: z.coerce.number().int().min(2000).max(2100),
-  period: z.coerce.number().int().min(1).max(12),
+  name: z.string().min(1, 'Name is required').max(200),
+  periodStart: z.coerce.date(),
+  periodEnd: z.coerce.date(),
   plannedAmount: z.coerce.number().nonnegative(),
+  analyticAccountId: z.string().cuid(),
+  responsiblePersonId: z.string().cuid(),
 });
 
 export const updateBudgetSchema = createBudgetSchema.partial();
 
 export const budgetIdParamSchema = z.object({
-  id: z.string().cuid(),
+  id: z.string().cuid('Invalid budget id'),
+});
+
+export const listBudgetsQuerySchema = z.object({
+  page: z.coerce.number().int().positive().optional(),
+  limit: z.coerce.number().int().positive().max(100).optional(),
+  analyticAccountId: z.string().cuid().optional(),
 });
 
 export const budgetReportQuerySchema = z.object({
-  fiscalYear: z.coerce.number().int().min(2000).max(2100),
-  period: z.coerce.number().int().min(1).max(12).optional(),
+  periodStart: z.coerce.date(),
+  periodEnd: z.coerce.date(),
 });

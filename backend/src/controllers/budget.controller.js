@@ -1,32 +1,36 @@
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiResponse, sendResponse } from '../utils/ApiResponse.js';
-import { prisma } from '../config/db.js';
-import { getPagination, paginationMeta } from '../utils/pagination.js';
+import * as budgetService from '../services/budget.service.js';
 
 export const listBudgets = asyncHandler(async (req, res) => {
-  const { skip, take, page, limit } = getPagination(req);
-  const [items, total] = await Promise.all([
-    prisma.budget.findMany({
-      select: {
-        id: true,
-        fiscalYear: true,
-        period: true,
-        plannedAmount: true,
-        account: { select: { id: true, code: true, name: true } },
-      },
-      skip,
-      take,
-      orderBy: [{ fiscalYear: 'desc' }, { period: 'asc' }],
-    }),
-    prisma.budget.count(),
-  ]);
-  sendResponse(res, new ApiResponse(200, { items, meta: paginationMeta(total, page, limit) }));
+  const result = await budgetService.listBudgets(req.query);
+  sendResponse(res, new ApiResponse(200, result));
+});
+
+export const getBudget = asyncHandler(async (req, res) => {
+  const budget = await budgetService.getBudgetById(req.params.id);
+  sendResponse(res, new ApiResponse(200, budget));
 });
 
 export const createBudget = asyncHandler(async (req, res) => {
-  const item = await prisma.budget.create({
-    data: req.body,
-    select: { id: true, fiscalYear: true, period: true, plannedAmount: true },
-  });
-  sendResponse(res, new ApiResponse(201, item, 'Budget created'));
+  const budget = await budgetService.createBudget(req.body);
+  sendResponse(res, new ApiResponse(201, budget, 'Budget created'));
 });
+
+export const updateBudget = asyncHandler(async (req, res) => {
+  const budget = await budgetService.updateBudget(req.params.id, req.body);
+  sendResponse(res, new ApiResponse(200, budget, 'Budget updated'));
+});
+
+export const deleteBudget = asyncHandler(async (req, res) => {
+  await budgetService.deleteBudget(req.params.id);
+  sendResponse(res, new ApiResponse(200, null, 'Budget deleted'));
+});
+
+export default {
+  listBudgets,
+  getBudget,
+  createBudget,
+  updateBudget,
+  deleteBudget,
+};

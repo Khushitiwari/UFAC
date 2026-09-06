@@ -28,6 +28,7 @@ const contactSelect = {
   },
 };
 
+
 const createPortalUserInTx = async (tx, contact, portalUser) => {
   if (contact.user) {
     throw new ApiError(409, 'This contact already has a portal user');

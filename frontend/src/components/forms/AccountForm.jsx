@@ -49,9 +49,16 @@ const AccountForm = ({ initialValues, onSubmit, onCancel, submitLabel = 'Save Ac
         </select>
       </div>
       <div className="form-group">
-        <label>
-          <input type="checkbox" name="isActive" checked={!!form.isActive} onChange={handleChange} /> Active
-        </label>
+        <div className="toggle-field">
+          <div>
+            <span className="toggle-field-label">Active account</span>
+            <span className="toggle-field-hint">Include in charts and journal entries</span>
+          </div>
+          <label className="toggle-switch">
+            <input type="checkbox" name="isActive" checked={!!form.isActive} onChange={handleChange} />
+            <span className="toggle-slider" aria-hidden="true" />
+          </label>
+        </div>
       </div>
       <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
         {onCancel && <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>}

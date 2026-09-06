@@ -175,15 +175,21 @@ const ContactForm = ({
 
           {allowPortalUser && showPortalFields && (
             <div className="portal-user-section">
-              <label className="checkbox-row">
-                <input
-                  type="checkbox"
-                  name="createPortalUser"
-                  checked={form.createPortalUser}
-                  onChange={handleChange}
-                />
-                Create portal login (customer/vendor user)
-              </label>
+              <div className="toggle-field">
+                <div>
+                  <span className="toggle-field-label">Create portal login</span>
+                  <span className="toggle-field-hint">Customer or vendor user (CONTACT role)</span>
+                </div>
+                <label className="toggle-switch">
+                  <input
+                    type="checkbox"
+                    name="createPortalUser"
+                    checked={form.createPortalUser}
+                    onChange={handleChange}
+                  />
+                  <span className="toggle-slider" aria-hidden="true" />
+                </label>
+              </div>
               {form.createPortalUser && (
                 <>
                   <div className="form-group">

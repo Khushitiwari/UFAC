@@ -7,7 +7,8 @@ const ViewToggle = ({ viewMode, onChange }) => (
       title="List view"
       aria-pressed={viewMode === 'list'}
     >
-      ☰ List
+      <span className="view-toggle-icon" aria-hidden="true">☰</span>
+      <span>List</span>
     </button>
     <button
       type="button"
@@ -16,7 +17,8 @@ const ViewToggle = ({ viewMode, onChange }) => (
       title="Kanban view"
       aria-pressed={viewMode === 'kanban'}
     >
-      ▦ Kanban
+      <span className="view-toggle-icon" aria-hidden="true">▦</span>
+      <span>Kanban</span>
     </button>
   </div>
 );

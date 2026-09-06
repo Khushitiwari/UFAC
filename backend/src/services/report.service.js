@@ -135,6 +135,8 @@ export const getProfitAndLoss = async (startDate, endDate) => {
 
 /**
  * Budget vs actual variance for a period.
+ * Actual = income/expense ledger lines tagged to the budget's analytic account.
+ * Variance = planned - actual (positive = under spend / below income target).
  * @param {Date} periodStart
  * @param {Date} periodEnd
  */
@@ -161,40 +163,50 @@ export const getBudgetVariance = async (periodStart, periodEnd) => {
 
   const analyticIds = budgets.map((b) => b.analyticAccount.id);
 
-  const actuals = await prisma.journalItem.groupBy({
-    by: ['analyticAccountId'],
+  const journalItems = await prisma.journalItem.findMany({
     where: {
       analyticAccountId: { in: analyticIds },
       journalEntry: {
         date: { gte: periodStart, lte: periodEnd },
       },
+      account: {
+        type: { in: ['INCOME', 'EXPENSE'] },
+      },
     },
-    _sum: {
+    select: {
+      analyticAccountId: true,
       debit: true,
       credit: true,
+      account: { select: { type: true } },
     },
   });
 
-  const actualMap = new Map(
-    actuals.map((a) => [
-      a.analyticAccountId,
-      {
-        debit: Number(a._sum.debit ?? 0),
-        credit: Number(a._sum.credit ?? 0),
-      },
-    ]),
-  );
+  const actualMap = new Map();
+  for (const item of journalItems) {
+    const analyticId = item.analyticAccountId;
+    if (!actualMap.has(analyticId)) {
+      actualMap.set(analyticId, { income: 0, expense: 0 });
+    }
+    const totals = actualMap.get(analyticId);
+    const debit = Number(item.debit ?? 0);
+    const credit = Number(item.credit ?? 0);
+    if (item.account.type === 'INCOME') {
+      totals.income += credit - debit;
+    } else {
+      totals.expense += debit - credit;
+    }
+  }
 
   return budgets.map((budget) => {
     const actualRow = actualMap.get(budget.analyticAccount.id) ?? {
-      debit: 0,
-      credit: 0,
+      income: 0,
+      expense: 0,
     };
     const planned = Number(budget.plannedAmount);
     const actual =
       budget.analyticAccount.type === 'INCOME'
-        ? actualRow.credit - actualRow.debit
-        : actualRow.debit - actualRow.credit;
+        ? actualRow.income
+        : actualRow.expense;
     const variance = planned - actual;
 
     return {

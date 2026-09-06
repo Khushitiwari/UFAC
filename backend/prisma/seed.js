@@ -53,11 +53,11 @@ async function upsertAccount(name, type) {
   });
 }
 
-async function seedUsers(passwordHash) {
+async function seedUsers(adminPasswordHash, accountantPasswordHash, staffPasswordHash) {
   const admin = await prisma.user.create({
     data: {
       email: 'admin@ufac.local',
-      passwordHash,
+      passwordHash: adminPasswordHash,
       name: 'Admin Owner',
       role: 'ADMIN',
     },
@@ -66,7 +66,7 @@ async function seedUsers(passwordHash) {
   const accountant = await prisma.user.create({
     data: {
       email: 'accountant@ufac.local',
-      passwordHash,
+      passwordHash: accountantPasswordHash,
       name: 'Jane Accountant',
       role: 'ACCOUNTANT',
     },
@@ -74,7 +74,7 @@ async function seedUsers(passwordHash) {
 
   const bulkUsers = Array.from({ length: BULK_COUNT - 4 }, (_, i) => ({
     email: `staff${pad(i + 1)}@bulk.ufac.local`,
-    passwordHash,
+    passwordHash: staffPasswordHash,
     name: `Staff User ${i + 1}`,
     role: i % 5 === 0 ? 'ADMIN' : 'ACCOUNTANT',
   }));
@@ -607,8 +607,14 @@ async function main() {
 
   await clearAllData();
 
-  const passwordHash = await bcrypt.hash('Admin123!', BCRYPT_ROUNDS);
-  const { admin, accountant, allUsers } = await seedUsers(passwordHash);
+  const adminPasswordHash = await bcrypt.hash('Admin123!', BCRYPT_ROUNDS);
+  const accountantPasswordHash = await bcrypt.hash('Account123!', BCRYPT_ROUNDS);
+  const staffPasswordHash = await bcrypt.hash('Admin123!', BCRYPT_ROUNDS);
+  const { admin, accountant, allUsers } = await seedUsers(
+    adminPasswordHash,
+    accountantPasswordHash,
+    staffPasswordHash,
+  );
   console.log('  Users seeded');
 
   const contacts = await seedContacts();

@@ -40,8 +40,8 @@ const BudgetReportPage = () => {
   }, [report]);
   const totals = useMemo(() => ({
     planned: rows.reduce((s, r) => s + Number(r.plannedAmount || 0), 0),
-    actual: rows.reduce((s, r) => s + Number(r.actualAmount || r.actual || 0), 0),
-    variance: rows.reduce((s, r) => s + Number(r.variance || (r.plannedAmount - (r.actualAmount || r.actual || 0))), 0),
+    actual: rows.reduce((s, r) => s + Number(r.actualAmount ?? 0), 0),
+    variance: rows.reduce((s, r) => s + Number(r.variance ?? (Number(r.plannedAmount || 0) - Number(r.actualAmount ?? 0))), 0),
   }), [rows]);
 
   return (
@@ -88,8 +88,8 @@ const BudgetReportPage = () => {
                 >
                   <td>{row.name || row.analyticAccount?.name}</td>
                   <td>{formatCurrency(row.plannedAmount)}</td>
-                  <td>{formatCurrency(row.actualAmount ?? row.actual)}</td>
-                  <td>{formatCurrency(row.variance ?? (row.plannedAmount - (row.actualAmount || row.actual || 0)))}</td>
+                  <td>{formatCurrency(row.actualAmount ?? 0)}</td>
+                  <td>{formatCurrency(row.variance ?? (Number(row.plannedAmount || 0) - Number(row.actualAmount ?? 0)))}</td>
                 </motion.tr>
               ))}
               <motion.tr
